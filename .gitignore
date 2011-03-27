@@ -1,0 +1,8 @@
+*.pyc
+.#*
+pgu/*
+data/*
+*~
+*.log
+*.pynt
+
