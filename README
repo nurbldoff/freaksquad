@@ -1,0 +1,4 @@
+arrow keys, pgup/down to move the cursor/subcursor
+return to switch between moving the subcursor and the main cursor
+a/s to add/remove blocks with the subcursor
++/- to scale the subcursor
