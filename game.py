@@ -115,7 +115,9 @@ class View(object):
                     rect.center = (cx+self.block_wx*(x-posx)-self.block_wy*(y-posy),
                                    cy+self.block_hy*(y-posy)+self.block_hx*(x-posx)-self.block_hz*(z-posz))
                     if self.screen.get_rect().contains(rect):
-                        block.draw(self.screen.subsurface(rect))
+                        block.draw()
+                        self.screen.subsurface(rect).blit(block.surface, (0,0))
+                        #self.screen.subsurface(rect).blit(self.block_img, (0,0))
                     if (x, y, z) == (self.position.x, self.position.y, self.position.z):
                         ##print "drawing cursor"
                         rect.center = (cx-self.block_wx*(posx-x)+self.block_wy*(posy-y),
@@ -213,11 +215,11 @@ while 1:
 
             elif event.key == pygame.K_a:
                 print v.subcurpos.tuple()
-                lv.get_block(v.position).put_sub_element(v.subcursor-1, v.subcurpos.tuple(), 1)
+                lv.get_block(v.position).put_sub_element(v.subcursor, v.subcurpos.tuple(), 1)
 
             elif event.key == pygame.K_s:
                 print v.subcurpos.tuple()
-                lv.get_block(v.position).remove_sub_element(v.subcursor-1, v.subcurpos.tuple())
+                lv.get_block(v.position).remove_sub_element(v.subcursor, v.subcurpos.tuple())
 
             elif event.key == pygame.K_RETURN:
                 v.subcursor_mode = not v.subcursor_mode

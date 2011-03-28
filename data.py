@@ -46,6 +46,7 @@ class Block(object):
                   pygame.image.load("block2c.png"),
                   pygame.image.load("block2d.png")]
     block_rects = [bl.get_rect() for bl in block_imgs]
+
     hz = 32
     wx = 16
     hx = 16
@@ -54,70 +55,85 @@ class Block(object):
 
     def __init__(self, tree=0):
         self.tree = tree
+        self.surface = pygame.Surface((self.block_rects[0].size), flags=pygame.SRCALPHA)
+        self.tainted = True
 
-    def draw(self, surface):
-        draw_octree(surface, self.block_imgs, (self.wx, self.hx, self.wy, self.hy, self.hz),
-                    self.tree, 0)
+    def draw(self):
+        if self.tainted:
+            self.surface.fill((0,0,0,0))
+            draw_octree(self.surface, self.block_imgs, (self.wx, self.hx, self.wy, self.hy, self.hz),
+                        self.tree, 0)
+            self.tainted=False
 
     def put_sub_element(self, scale, position, kind):
-        if self.tree == 0:
-            self.tree = [0,0,0,0,0,0,0,0]
-        elif self.tree == 1:
-            return   #nothing to be done!
-        tree = self.tree
-        x, y, z = position
-        print "scale:", scale
-        for i in range(scale,-1,-1):
-            d = 2**i
-            lx = x // d
-            ly = y // d
-            lz = z // d
-            x -= lx*d
-            y -= ly*d
-            z -= lz*d
-            n = lz*4+ly*2+lx
-            print "n=",n
+        if scale == 0:
+            self.tree = 1
+            self.tainted = True
+        else:
+            if self.tree == 0:
+                self.tree = [0,0,0,0,0,0,0,0]
+            elif self.tree == 1:
+                return   #nothing to be done!
+            tree = self.tree
+            x, y, z = position
+            print "scale:", scale
+            for i in range(scale,0,-1):
+                d = 2**(i-1)
+                lx = x // d
+                ly = y // d
+                lz = z // d
+                x -= lx*d
+                y -= ly*d
+                z -= lz*d
+                n = lz*4+ly*2+lx
+                print "n=",n
 
-            if i == 0:
-                tree[n] = kind
-            else:
-                if tree[n] == 0:
-                    tree[n] = tmp = [0,0,0,0,0,0,0,0]
-                    tree = tmp
-                elif tree[n] == 1:
-                    pass
+                if i == 1:
+                    tree[n] = kind
                 else:
-                    tree = tree[n]
+                    if tree[n] == 0:
+                        tree[n] = tmp = [0,0,0,0,0,0,0,0]
+                        tree = tmp
+                    elif tree[n] == 1:
+                        pass
+                    else:
+                        tree = tree[n]
+            self.tainted=True
 
     def remove_sub_element(self, scale, position):
-        if self.tree == 1:
-            self.tree = [1,1,1,1,1,1,1,1]
-        elif self.tree == 0:
-            return   #nothing needs to be done!
-        tree = self.tree
-        x, y, z = position
-        print "scale:", scale
-        for i in range(scale,-1,-1):
-            d = 2**i
-            lx = x // d
-            ly = y // d
-            lz = z // d
-            x -= lx*d
-            y -= ly*d
-            z -= lz*d
-            n = lz*4+ly*2+lx
-            print "n=",n
+        if scale == 0:
+            self.tree = 0
+            self.tainted=True
+        else:
+            if self.tree == 1:
+                self.tree = [1,1,1,1,1,1,1,1]
+            elif self.tree == 0:
+                return   #nothing needs to be done!
+            tree = self.tree
+            x, y, z = position
+            print "scale:", scale
+            for i in range(scale,0,-1):
+                d = 2**(i-1)
+                lx = x // d
+                ly = y // d
+                lz = z // d
+                x -= lx*d
+                y -= ly*d
+                z -= lz*d
+                n = lz*4+ly*2+lx
+                print "n=",n
 
-            if i == 0:
-                tree[n] = 0
-            else:
-                if tree[n] == 1:
-                    tree[n] = tmp = [1,1,1,1,1,1,1,1]
-                    tree = tmp
-                elif tree[n] == 0:
-                    exit
+                if i == 1:
+                    tree[n] = 0
                 else:
-                    tree = tree[n]
+                    if tree[n] == 1:
+                        tree[n] = tmp = [1,1,1,1,1,1,1,1]
+                        tree = tmp
+                    elif tree[n] == 0:
+                        exit
+                    else:
+                        tree = tree[n]
+            self.tainted=True
 
 
 
