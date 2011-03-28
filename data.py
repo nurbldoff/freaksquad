@@ -78,6 +78,7 @@ class Block(object):
             x, y, z = position
             print "scale:", scale
             for i in range(scale,0,-1):
+                # calculate block index from coordinates
                 d = 2**(i-1)
                 lx = x // d
                 ly = y // d
@@ -86,7 +87,7 @@ class Block(object):
                 y -= ly*d
                 z -= lz*d
                 n = lz*4+ly*2+lx
-                print "n=",n
+                #print "n=",n
 
                 if i == 1:
                     tree[n] = kind

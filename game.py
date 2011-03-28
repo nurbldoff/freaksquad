@@ -20,7 +20,7 @@ class View(object):
         self.size = size #width, height
         self.level = level
         self.position = Vector(*position)
-        self.subcursor = 1
+        self.subcursor = 0
         self.subcursor_mode=False
         self.subcurpos = Vector(0,0,0)
 
