@@ -175,7 +175,9 @@ class View(object):
 
         ###print v.position
         postext = self.font.render("%d, %d, %d"%v.position.tuple(), 1, (255,255,0))
+        subpostext = self.font.render("%d, %d, %d"%v.subcurpos.tuple(), 1, (0,255,0))
         self.screen.blit(postext, (10,10))
+        self.screen.blit(subpostext, (10,30))
         pygame.display.flip()
 
     def draw_block(self, index, screencenter, rotation=0):
@@ -200,37 +202,15 @@ class View(object):
         #               cy-self.block_depth//2*(posy+posx-x-y)-self.block_height*(z-posz))
         rect.center = (cx+zoom*(block.wx*(x-posx)-block.wy*(y-posy)),
                        cy+zoom*(block.hy*(y-posy)+block.hx*(x-posx)-block.hz*(z-posz)))
-        rect.size = rect.width*zoom, rect.height*zoom
+        #rect.size = rect.width*zoom, rect.height*zoom
         if self.screen.get_rect().contains(rect):
             block.draw(zoom=zoom, rotation=rotation)
-            #surf = block.surface.copy()
-            #mask = block.surface.copy()
-            #mask.fill((255,255,255))
-            #self.black_img.set_alpha(100)
-
-            #self.black_img.blit(mask, (0,0), None, pygame.BLEND_RGBA_MIN)
-            #surf.blit(self.black_img, (0,0))
             self.screen.blit(block.surface, rect)
-            #mask = pygame.mask_from_surface(block.surface)
 
-            #self.screen.subsurface(rect).blit(self.block_img, (0,0))
         if (rx, ry, rz) == self.position.tuple():
             ##print "drawing cursor"
-            #rect.center = (cx-zoom*(block.wx*(posx-x)+block.wy*(posy-y)),
-            #                cy-zoom*(block.hy*(posy-y)+block.hx*(posx-x)-block.hz*(z-posz)))
             self.cursor.draw(zoom=zoom, rotation=rotation)
             self.screen.blit(self.cursor.surface, rect)
-            # if self.subcursor > 0:
-            #     xsub, ysub, zsub = self.subcurpos.tuple()
-            #     wx, hx, wy, hy, hz = self.get_subcursor_sizes()
-            #     ###print "rect before:", rect.topleft
-            #     rect =  rect.move(xsub*wx+(2**self.subcursor-1-ysub)*wy,
-            #                       ysub*hy+xsub*hx+(2**self.subcursor-1-zsub)*hz)
-            #     ###print "rect after:", rect.topleft
-            #     ##print "subcursor:", (x*wx+(2**self.subcursor-1-y)*wy, y*hy+x*hx+(2**self.subcursor-1-z)*hz)
-
-            #     self.screen.blit(self.cursor_imgs[self.subcursor], rect)
-
 
     def get_screen_center(self):
         return self.size[0]//2, self.size[1]//2
