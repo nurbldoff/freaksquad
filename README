@@ -1,9 +1,21 @@
-                       CONTROLS
+WHAT IS IT?
 
-           arrow keys  move the cursor/subcursor in the plane
-            pgup/down  move the cursor/subcursor vertically
-               return  switch between moving the subcursor and the main cursor
-                  a/s  add/remove blocks with the subcursor
-                  +/-  scale the subcursor
-                  q/w  rotate the view around the cursor
-                    z  to toggle zoom mode
+   An isometric game engine.
+
+
+CONTROLS
+       arrow keys  move the cursor/subcursor in the plane
+        pgup/down  move the cursor/subcursor vertically
+            0 - 7  put/remove a wall in one direction (se below), at the cursor
+
+DIRECTIONS
+
+        0
+      /   \
+    1       7
+  /           \
+2               6
+  \           /
+    3       5
+      \   /
+        4
