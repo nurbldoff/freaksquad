@@ -84,6 +84,8 @@ class View(object):
                                 self.screen.blit(self.wall1_img, rect)
                             else:
                                 self.screen.blit(self.corner_img, rect)
+
+                    # draw floor (if any)
                     if bl.floor is None:
                         pass
                     elif bl.floor <= 0.5:
@@ -95,7 +97,7 @@ class View(object):
                                        cy-self.block_depth//2*(posy+posx-x-y)-self.block_height*(z-posz))
                         self.screen.blit(self.block_img, rect)
 
-                    for w in (6,3,5,4):  # draw walls from the back
+                    for w in (6,3,5,4):  # draw walls in front
                         if bl.walls.has_key(w):
                             xfact, yfact = get_wall_offset(w)
                             xoffs = xfact*rect.width
@@ -167,21 +169,21 @@ while 1:
                     bl.floor = 0.5
 
 
-            elif event.key == pygame.K_0:
+            elif event.key == pygame.K_KP9:
                 direction = 0
-            elif event.key == pygame.K_1:
+            elif event.key == pygame.K_KP8:
                 direction = 1
-            elif event.key == pygame.K_2:
+            elif event.key == pygame.K_KP7:
                 direction = 2
-            elif event.key == pygame.K_3:
+            elif event.key == pygame.K_KP4:
                 direction = 3
-            elif event.key == pygame.K_4:
+            elif event.key == pygame.K_KP1:
                 direction = 4
-            elif event.key == pygame.K_5:
+            elif event.key == pygame.K_KP2:
                 direction = 5
-            elif event.key == pygame.K_6:
+            elif event.key == pygame.K_KP3:
                 direction = 6
-            elif event.key == pygame.K_7:
+            elif event.key == pygame.K_KP6:
                 direction = 7
 
             if direction > -1:

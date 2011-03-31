@@ -6,17 +6,5 @@ WHAT IS IT?
 CONTROLS
        arrow keys  move the cursor/subcursor in the plane
         pgup/down  move the cursor/subcursor vertically
-            0 - 7  put/remove a wall in one direction (se below), at the cursor
+           numpad  put/remove a wall in one direction (se below), at the cursor
 	    space  toggle floor: block/half-block/nothing
-
-DIRECTIONS
-
-        0
-      /   \
-    1       7
-  /           \
-2               6
-  \           /
-    3       5
-      \   /
-        4
