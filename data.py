@@ -50,13 +50,13 @@ class Block(object):
     def set_wall(self, direction, kind=1, corners=True):
         self.walls[direction] = kind
         if corners and direction%2 == 1:
-            self.walls[direction+1] = self.walls[direction-1] = kind
+            self.walls[(direction+1)%8] = self.walls[(direction-1)%8] = kind
 
     def remove_wall(self, direction, corners=True):
         if self.walls.has_key(direction):
             del self.walls[direction]
         if corners and direction%2 == 1:
-            if self.walls.has_key(direction+1):
-                del self.walls[direction+1]
-            if self.walls.has_key(direction+1):
-                del self.walls[direction-1]
+            if self.walls.has_key((direction+1)%8):
+                del self.walls[(direction+1)%8]
+            if self.walls.has_key((direction-1)%8):
+                del self.walls[(direction-1)%8]
