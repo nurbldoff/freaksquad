@@ -71,7 +71,7 @@ class View(object):
                     #     rect.center = (cx-self.block_width//2*(posx-posy-x+y),
                     #                    cy-self.block_depth//2*(posy+posx-x-y)-self.block_height*(z-posz))
                     #     self.screen.blit(self.block_img, rect)
-                    for w in (0,1,7,2):  #6,3,5,4):  # draw walls from the back
+                    for w in (0,1,7,2):  # draw walls from the back
                         if bl.walls.has_key(w):
                             xfact, yfact = get_wall_offset(w)
                             xoffs = xfact*rect.width
@@ -95,6 +95,21 @@ class View(object):
                                        cy-self.block_depth//2*(posy+posx-x-y)-self.block_height*(z-posz))
                         self.screen.blit(self.block_img, rect)
 
+                    for w in (6,3,5,4):  # draw walls from the back
+                        if bl.walls.has_key(w):
+                            xfact, yfact = get_wall_offset(w)
+                            xoffs = xfact*rect.width
+                            yoffs = yfact*self.block_depth
+                            rect.center = (cx-self.block_width//2*(posx-posy-x+y)+xoffs,
+                                           cy-self.block_depth//2*(posy+posx-x-y)-self.block_height*(z-posz)+yoffs)
+                            if w in (1,5):
+                                self.screen.blit(self.wall2_img, rect)
+                            elif w in (3,7):
+                                self.screen.blit(self.wall1_img, rect)
+                            else:
+                                self.screen.blit(self.corner_img, rect)
+
+
                     if (x, y, z) == (self.position.x, self.position.y, self.position.z):
                         print "drawing cursor"
                         rect.center = (cx-self.block_width//2*(posx-posy-x+y),
@@ -113,8 +128,8 @@ lv = data.Level(size=(10,10,10))
 for i in range(10):
     lv.put_block(Vector(i,0,0), data.Block(walls={0:1}))
     lv.put_block(Vector(0,2,i), data.Block(walls={7:1}))
-    #lv.put_block(Vector(0,i,0), data.Block(walls={0:1, 1:1, 2:1, 3:1, 4:1, 5:1, 6:1, 7:1}))
-    lv.put_block(Vector(0,i,0), data.Block(walls={1:1, 3:1, 5:1, 7:1}, floor=0.5))
+    lv.put_block(Vector(0,i,0), data.Block(walls={0:1, 1:1, 2:1, 3:1, 4:1, 5:1, 6:1, 7:1}))
+    #lv.put_block(Vector(0,i,0), data.Block(walls={1:1, 3:1, 5:1, 7:1}, floor=0.5))
 
 
 #for i in range(100):
@@ -169,10 +184,11 @@ while 1:
             elif event.key == pygame.K_7:
                 direction = 7
 
-            if direction > -1 and direction in bl.walls:
-                bl.walls[direction]=int(not bl.walls[direction])
-            else:
-                bl.walls[direction]=1
+            if direction > -1:
+                if direction in bl.walls:
+                    bl.walls.pop(direction)
+                else:
+                    bl.walls[direction]=1
 
 
             v.draw()

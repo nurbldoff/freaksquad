@@ -29,7 +29,9 @@ class Level(object):
 
 class Block(object):
     """
-    This is the basic building block of the world
+    This is the basic building block of the world.
+
+    walls : a dict.
     """
 
     def __init__(self, walls=None, floor=None):
@@ -39,3 +41,11 @@ class Block(object):
             self.walls = walls  # walls are numbered in positive direction starting from top
         self.floor = floor
 
+    def get_wall(self, direction):
+        if self.walls.has_key(direction):
+            return self.walls[direction]
+        else:
+            return None
+
+    def set_wall(self, direction, kind=1):
+        self.walls[direction] = kind
