@@ -52,6 +52,17 @@ class View(object):
         self.wall2_img = pygame.image.load("wall2.png")
         self.corner_img = pygame.image.load("corner.png")
 
+        self.thinwalls = [
+            pygame.image.load("thinwall0.png"),
+            pygame.image.load("thinwall1.png"),
+            pygame.image.load("thinwall2.png"),
+            pygame.image.load("thinwall3.png"),
+            pygame.image.load("thinwall4.png"),
+            pygame.image.load("thinwall5.png"),
+            pygame.image.load("thinwall6.png"),
+            pygame.image.load("thinwall7.png")
+            ]
+
         self.cursor_img = pygame.image.load("cursor.png")
         self.cursor_rect = self.block_img.get_rect()
 
@@ -66,57 +77,56 @@ class View(object):
             for y in range(self.level.ysize):
                 for x in range(self.level.xsize):
                     bl = self.level.get_block(Vector(x, y, z))
-                    # if self.level.data[z][y][x] == 1:
-                    #
-                    #     rect.center = (cx-self.block_width//2*(posx-posy-x+y),
-                    #                    cy-self.block_depth//2*(posy+posx-x-y)-self.block_height*(z-posz))
-                    #     self.screen.blit(self.block_img, rect)
-                    for w in (0,1,7,2):  # draw walls from the back
-                        if bl.walls.has_key(w):
-                            xfact, yfact = get_wall_offset(w)
-                            xoffs = xfact*rect.width
-                            yoffs = yfact*self.block_depth
-                            rect.center = (cx-self.block_width//2*(posx-posy-x+y)+xoffs,
-                                           cy-self.block_depth//2*(posy+posx-x-y)-self.block_height*(z-posz)+yoffs)
-                            if w in (1,5):
-                                self.screen.blit(self.wall2_img, rect)
-                            elif w in (3,7):
-                                self.screen.blit(self.wall1_img, rect)
-                            else:
-                                self.screen.blit(self.corner_img, rect)
 
-                    # draw floor (if any)
-                    if bl.floor is None:
-                        pass
-                    elif bl.floor <= 0.5:
-                        rect.center = (cx-self.block_width//2*(posx-posy-x+y),
-                                       cy-self.block_depth//2*(posy+posx-x-y)-self.block_height*(z-posz))
-                        self.screen.blit(self.block_half_img, rect)
-                    else:
-                        rect.center = (cx-self.block_width//2*(posx-posy-x+y),
-                                       cy-self.block_depth//2*(posy+posx-x-y)-self.block_height*(z-posz))
-                        self.screen.blit(self.block_img, rect)
+                    rect.center = (cx-self.block_width//2*(posx-posy-x+y),
+                                   cy-self.block_depth//2*(posy+posx-x-y)-self.block_height*(z-posz))
+                    # Check that we're not drawing outside the screen, which would be
+                    # a waste of time.
+                    if rect.clip(self.screen.get_rect()).size != (0,0):
 
-                    for w in (6,3,5,4):  # draw walls in front
-                        if bl.walls.has_key(w):
-                            xfact, yfact = get_wall_offset(w)
-                            xoffs = xfact*rect.width
-                            yoffs = yfact*self.block_depth
-                            rect.center = (cx-self.block_width//2*(posx-posy-x+y)+xoffs,
-                                           cy-self.block_depth//2*(posy+posx-x-y)-self.block_height*(z-posz)+yoffs)
-                            if w in (1,5):
-                                self.screen.blit(self.wall2_img, rect)
-                            elif w in (3,7):
-                                self.screen.blit(self.wall1_img, rect)
-                            else:
-                                self.screen.blit(self.corner_img, rect)
+                        for w in (0,1,7,2):  # draw walls from the back
+                            if bl.walls.has_key(w):
+                                #xfact, yfact = get_wall_offset(w)
+                                #xoffs = xfact*rect.width
+                                #yoffs = yfact*self.block_depth
+                                #rect.center = (cx-self.block_width//2*(posx-posy-x+y)+xoffs,
+                                #               cy-self.block_depth//2*(posy+posx-x-y)-self.block_height*(z-posz)+yoffs)
+
+                                self.screen.blit(self.thinwalls[w], rect)
+                                #self.screen.blit(self.thinwall7_img, rect)
+
+                        # draw floor (if any)
+                        if bl.floor is None:
+                            pass
+                        elif bl.floor <= 0.5:
+                            rect.center = (cx-self.block_width//2*(posx-posy-x+y),
+                                           cy-self.block_depth//2*(posy+posx-x-y)-self.block_height*(z-posz))
+                            self.screen.blit(self.block_half_img, rect)
+                        else:
+                            rect.center = (cx-self.block_width//2*(posx-posy-x+y),
+                                           cy-self.block_depth//2*(posy+posx-x-y)-self.block_height*(z-posz))
+                            self.screen.blit(self.block_img, rect)
+
+                        for w in (6,3,5,4):  # draw walls in front
+                            if bl.walls.has_key(w):
+                                #xfact, yfact = get_wall_offset(w)
+                                #xoffs = xfact*rect.width
+                                #yoffs = yfact*self.block_depth
+                                #rect.center = (cx-self.block_width//2*(posx-posy-x+y)+xoffs,
+                                #               cy-self.block_depth//2*(posy+posx-x-y)-self.block_height*(z-posz)+yoffs)
+                                #if w == 3:
+                                #    self.screen.blit(self.thinwall3_img, rect)
+                                #elif w == 5:
+                                #    self.screen.blit(self.thinwall5_img, rect)
+                                self.screen.blit(self.thinwalls[w], rect)
+
+                        if (x, y, z) == (self.position.x, self.position.y, self.position.z):
+                            print "drawing cursor"
+                            rect.center = (cx-self.block_width//2*(posx-posy-x+y),
+                                           cy-self.block_depth//2*(posy+posx-x-y)-self.block_height*(z-posz))
+                            self.screen.blit(self.cursor_img, rect)
 
 
-                    if (x, y, z) == (self.position.x, self.position.y, self.position.z):
-                        print "drawing cursor"
-                        rect.center = (cx-self.block_width//2*(posx-posy-x+y),
-                                       cy-self.block_depth//2*(posy+posx-x-y)-self.block_height*(z-posz))
-                        self.screen.blit(self.cursor_img, rect)
         #print v.position
         postext = self.font.render("%d, %d, %d"%v.position.tuple(), 1, (255,255,0))
         self.screen.blit(postext, (10,10))
@@ -147,13 +157,13 @@ while 1:
             bl = lv.get_block(v.position)
             direction = -1
 
-            if event.key == pygame.K_RIGHT:
+            if event.key == pygame.K_DOWN:
                 v.position.x = constrain(v.position.x+1, 0, lv.xsize-1)
-            elif event.key == pygame.K_LEFT:
-                v.position.x = constrain(v.position.x-1, 0, lv.xsize-1)
-            elif event.key == pygame.K_DOWN:
-                v.position.y = constrain(v.position.y+1, 0, lv.ysize-1)
             elif event.key == pygame.K_UP:
+                v.position.x = constrain(v.position.x-1, 0, lv.xsize-1)
+            elif event.key == pygame.K_LEFT:
+                v.position.y = constrain(v.position.y+1, 0, lv.ysize-1)
+            elif event.key == pygame.K_RIGHT:
                 v.position.y = constrain(v.position.y-1, 0, lv.ysize-1)
             elif event.key == pygame.K_PAGEUP:
                 v.position.z = constrain(v.position.z+1, 0, lv.zsize-1)
@@ -187,10 +197,10 @@ while 1:
                 direction = 7
 
             if direction > -1:
-                if direction in bl.walls:
-                    bl.walls.pop(direction)
+                if bl.get_wall(direction) is not None:
+                    bl.remove_wall(direction)
                 else:
-                    bl.walls[direction]=1
+                    bl.set_wall(direction, 1)
 
 
             v.draw()
