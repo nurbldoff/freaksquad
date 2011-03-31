@@ -84,7 +84,7 @@ class View(object):
                     # a waste of time.
                     if rect.clip(self.screen.get_rect()).size != (0,0):
 
-                        for w in (0,1,7,2):  # draw walls from the back
+                        for w in (0,1,7,2,6):  # draw walls from the back
                             if bl.walls.has_key(w):
                                 #xfact, yfact = get_wall_offset(w)
                                 #xoffs = xfact*rect.width
@@ -107,7 +107,7 @@ class View(object):
                                            cy-self.block_depth//2*(posy+posx-x-y)-self.block_height*(z-posz))
                             self.screen.blit(self.block_img, rect)
 
-                        for w in (6,3,5,4):  # draw walls in front
+                        for w in (3,5,4):  # draw walls in front
                             if bl.walls.has_key(w):
                                 #xfact, yfact = get_wall_offset(w)
                                 #xoffs = xfact*rect.width
