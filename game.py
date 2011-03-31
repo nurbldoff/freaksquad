@@ -179,21 +179,21 @@ while 1:
                     bl.floor = 0.5
 
 
-            elif event.key == pygame.K_KP9:
+            elif event.key == pygame.K_e:
                 direction = 0
-            elif event.key == pygame.K_KP8:
+            elif event.key == pygame.K_w:
                 direction = 1
-            elif event.key == pygame.K_KP7:
+            elif event.key == pygame.K_q:
                 direction = 2
-            elif event.key == pygame.K_KP4:
+            elif event.key == pygame.K_a:
                 direction = 3
-            elif event.key == pygame.K_KP1:
+            elif event.key == pygame.K_z:
                 direction = 4
-            elif event.key == pygame.K_KP2:
+            elif event.key == pygame.K_x:
                 direction = 5
-            elif event.key == pygame.K_KP3:
+            elif event.key == pygame.K_c:
                 direction = 6
-            elif event.key == pygame.K_KP6:
+            elif event.key == pygame.K_d:
                 direction = 7
 
             if direction > -1:
