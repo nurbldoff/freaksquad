@@ -4,31 +4,12 @@ from collections import namedtuple
 import sys, pygame
 import data
 from vector import Vector
+from utils import constrain, texture_wall
 
 # colors
 BLACK = 0,0,0
 
-def constrain(value, minlim, maxlim):
-    "Return the value if it lies between max and min inclusive, otherwise return the closest of max ang min."
-    return max(minlim, min(maxlim, value))
 
-def get_wall_offset(n):
-    if n == 0:
-        return (0,-0.5)
-    if n == 1:
-        return (-0.25, -0.25)
-    if n == 2:
-        return (-0.5, 0)
-    if n == 3:
-        return (-0.25, 0.25)
-    if n == 4:
-        return (0, 0.5)
-    if n == 5:
-        return (0.25, 0.25)
-    if n == 6:
-        return (0.5, 0)
-    if n == 7:
-        return (0.25, -0.25)
 
 pygame.init()
 
@@ -41,27 +22,42 @@ class View(object):
         self.screen = pygame.display.set_mode(size)
         self.clock = pygame.time.Clock()
 
-        self.block_img = pygame.image.load("block.png")
+        self.block_img = pygame.image.load("block_textured.png")
         self.block_half_img = pygame.image.load("block_half.png")
+        self.floor_img = pygame.image.load("floor.png")
         self.block_rect = self.block_img.get_rect()
-        self.block_height = 32
-        self.block_width = 56
-        self.block_depth = 28
+        self.block_height = 36
+        self.block_width = 64
+        self.block_depth = 32
 
         self.wall1_img = pygame.image.load("wall1.png")
         self.wall2_img = pygame.image.load("wall2.png")
         self.corner_img = pygame.image.load("corner.png")
+        self.concrete_texture = (
+            pygame.image.load("block_textured_leftwall.png").convert_alpha(),
+            pygame.image.load("block_textured_rightwall.png").convert_alpha(),
+            pygame.image.load("block_textured_top.png").convert_alpha()
+            )
 
         self.thinwalls = [
-            pygame.image.load("thinwall0.png"),
-            pygame.image.load("thinwall1.png"),
-            pygame.image.load("thinwall2.png"),
-            pygame.image.load("thinwall3.png"),
-            pygame.image.load("thinwall4.png"),
-            pygame.image.load("thinwall5.png"),
-            pygame.image.load("thinwall6.png"),
-            pygame.image.load("thinwall7.png")
+            pygame.image.load("thinwall0.png").convert(),
+            pygame.image.load("thinwall1.png").convert(),
+            pygame.image.load("thinwall2.png").convert(),
+            pygame.image.load("thinwall3.png").convert(),
+            pygame.image.load("thinwall4.png").convert(),
+            pygame.image.load("thinwall5.png").convert(),
+            pygame.image.load("thinwall6.png").convert(),
+            pygame.image.load("thinwall7.png").convert()
             ]
+
+        texture_wall(self.thinwalls[0], self.concrete_texture, 0, 1)
+        texture_wall(self.thinwalls[1], self.concrete_texture, 1, 1)
+        texture_wall(self.thinwalls[2], self.concrete_texture, 2, 1)
+        texture_wall(self.thinwalls[3], self.concrete_texture, 3, 1)
+        texture_wall(self.thinwalls[4], self.concrete_texture, 4, 1)
+        texture_wall(self.thinwalls[5], self.concrete_texture, 5, 1)
+        texture_wall(self.thinwalls[6], self.concrete_texture, 6, 1)
+        texture_wall(self.thinwalls[7], self.concrete_texture, 7, 1)
 
         self.cursor_img = pygame.image.load("cursor.png")
         self.cursor_rect = self.block_img.get_rect()
@@ -76,7 +72,11 @@ class View(object):
         for z in range(self.level.zsize):
             for y in range(self.level.ysize):
                 for x in range(self.level.xsize):
+
                     bl = self.level.get_block(Vector(x, y, z))
+
+                    # an offscreen bitmap to draw the block into
+                    surf = pygame.Surface(rect.size, pygame.SRCALPHA)
 
                     rect.center = (cx-self.block_width//2*(posx-posy-x+y),
                                    cy-self.block_depth//2*(posy+posx-x-y)-self.block_height*(z-posz))
@@ -84,48 +84,35 @@ class View(object):
                     # a waste of time.
                     if rect.clip(self.screen.get_rect()).size != (0,0):
 
-                        for w in (0,1,7,2,6):  # draw walls from the back
+                        if bl.floor == 0:
+                            surf.blit(self.floor_img, (0,0))
+
+                        # draw walls from the back
+                        for w in (0,1,7):
                             if bl.walls.has_key(w):
-                                #xfact, yfact = get_wall_offset(w)
-                                #xoffs = xfact*rect.width
-                                #yoffs = yfact*self.block_depth
-                                #rect.center = (cx-self.block_width//2*(posx-posy-x+y)+xoffs,
-                                #               cy-self.block_depth//2*(posy+posx-x-y)-self.block_height*(z-posz)+yoffs)
+                                surf.blit(self.thinwalls[w], (0,0))
 
-                                self.screen.blit(self.thinwalls[w], rect)
-                                #self.screen.blit(self.thinwall7_img, rect)
+                        # draw higher floor (if any)
+                        if bl.floor == 0.5:
+                            surf.blit(self.block_half_img, (0,0))
+                        elif bl.floor == 1:
+                            surf.blit(self.block_img, (0,0))
 
-                        # draw floor (if any)
-                        if bl.floor is None:
-                            pass
-                        elif bl.floor <= 0.5:
-                            rect.center = (cx-self.block_width//2*(posx-posy-x+y),
-                                           cy-self.block_depth//2*(posy+posx-x-y)-self.block_height*(z-posz))
-                            self.screen.blit(self.block_half_img, rect)
-                        else:
-                            rect.center = (cx-self.block_width//2*(posx-posy-x+y),
-                                           cy-self.block_depth//2*(posy+posx-x-y)-self.block_height*(z-posz))
-                            self.screen.blit(self.block_img, rect)
-
-                        for w in (3,5,4):  # draw walls in front
+                        # draw walls in front
+                        for w in (2,6,3,5,4):
                             if bl.walls.has_key(w):
-                                #xfact, yfact = get_wall_offset(w)
-                                #xoffs = xfact*rect.width
-                                #yoffs = yfact*self.block_depth
-                                #rect.center = (cx-self.block_width//2*(posx-posy-x+y)+xoffs,
-                                #               cy-self.block_depth//2*(posy+posx-x-y)-self.block_height*(z-posz)+yoffs)
-                                #if w == 3:
-                                #    self.screen.blit(self.thinwall3_img, rect)
-                                #elif w == 5:
-                                #    self.screen.blit(self.thinwall5_img, rect)
-                                self.screen.blit(self.thinwalls[w], rect)
+                                surf.blit(self.thinwalls[w], (0,0))
+
+                        #if x+y > self.position.x+self.position.y:
+                        #    surf.set_alpha(127)
+                        self.screen.blit(surf, rect)
 
                         if (x, y, z) == (self.position.x, self.position.y, self.position.z):
                             print "drawing cursor"
                             rect.center = (cx-self.block_width//2*(posx-posy-x+y),
                                            cy-self.block_depth//2*(posy+posx-x-y)-self.block_height*(z-posz))
-                            self.screen.blit(self.cursor_img, rect)
 
+                            self.screen.blit(self.cursor_img, rect)
 
         #print v.position
         postext = self.font.render("%d, %d, %d"%v.position.tuple(), 1, (255,255,0))
@@ -173,10 +160,12 @@ while 1:
             elif event.key == pygame.K_SPACE:
                 if bl.floor == None:
                     bl.floor = 1
-                elif bl.floor == 0.5:
-                    bl.floor = None
                 elif bl.floor == 1:
                     bl.floor = 0.5
+                elif bl.floor == 0.5:
+                    bl.floor = 0
+                elif bl.floor == 0:
+                    bl.floor = None
 
 
             elif event.key in (pygame.K_e, pygame.K_KP9):
