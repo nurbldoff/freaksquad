@@ -21,32 +21,32 @@ class View(object):
         self.screen = pygame.display.set_mode(size)
         self.clock = pygame.time.Clock()
 
-        self.block_img = pygame.image.load("block_textured.png")
-        self.block_half_img = pygame.image.load("block_half.png")
-        self.floor_img = pygame.image.load("floor.png")
+        self.block_img = pygame.image.load("gfx/block_textured.png")
+        self.block_half_img = pygame.image.load("gfx/block_half.png")
+        self.floor_img = pygame.image.load("gfx/floor.png")
         self.block_rect = self.block_img.get_rect()
         self.block_height = 36
         self.block_width = 64
         self.block_depth = 32
 
-        self.wall1_img = pygame.image.load("wall1.png")
-        self.wall2_img = pygame.image.load("wall2.png")
-        self.corner_img = pygame.image.load("corner.png")
+        self.wall1_img = pygame.image.load("gfx/wall1.png")
+        self.wall2_img = pygame.image.load("gfx/wall2.png")
+        self.corner_img = pygame.image.load("gfx/corner.png")
         self.concrete_texture = (
-            pygame.image.load("block_textured_leftwall.png").convert_alpha(),
-            pygame.image.load("block_textured_rightwall.png").convert_alpha(),
-            pygame.image.load("block_textured_top.png").convert_alpha()
+            pygame.image.load("gfx/block_textured_leftwall.png").convert_alpha(),
+            pygame.image.load("gfx/block_textured_rightwall.png").convert_alpha(),
+            pygame.image.load("gfx/block_textured_top.png").convert_alpha()
             )
 
         self.thinwalls = [
-            pygame.image.load("thinwall0.png").convert(),
-            pygame.image.load("thinwall1.png").convert(),
-            pygame.image.load("thinwall2.png").convert(),
-            pygame.image.load("thinwall3.png").convert(),
-            pygame.image.load("thinwall4.png").convert(),
-            pygame.image.load("thinwall5.png").convert(),
-            pygame.image.load("thinwall6.png").convert(),
-            pygame.image.load("thinwall7.png").convert()
+            pygame.image.load("gfx/thinwall0.png").convert(),
+            pygame.image.load("gfx/thinwall1.png").convert(),
+            pygame.image.load("gfx/thinwall2.png").convert(),
+            pygame.image.load("gfx/thinwall3.png").convert(),
+            pygame.image.load("gfx/thinwall4.png").convert(),
+            pygame.image.load("gfx/thinwall5.png").convert(),
+            pygame.image.load("gfx/thinwall6.png").convert(),
+            pygame.image.load("gfx/thinwall7.png").convert()
             ]
 
         texture_wall(self.thinwalls[0], self.concrete_texture, 0, 1)
@@ -58,7 +58,7 @@ class View(object):
         texture_wall(self.thinwalls[6], self.concrete_texture, 6, 1)
         texture_wall(self.thinwalls[7], self.concrete_texture, 7, 1)
 
-        self.cursor_img = pygame.image.load("cursor.png")
+        self.cursor_img = pygame.image.load("gfx/cursor.png")
         self.cursor_rect = self.block_img.get_rect()
 
         self.font = pygame.font.Font(None, 25)
