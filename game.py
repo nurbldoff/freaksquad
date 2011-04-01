@@ -4,12 +4,10 @@ from collections import namedtuple
 import sys, pygame
 import data
 from vector import Vector
-from utils import constrain, texture_wall
+from utils import constrain, texture_wall, rotate_xypos
 
 # colors
 BLACK = 0,0,0
-
-
 
 pygame.init()
 
@@ -18,6 +16,7 @@ class View(object):
         self.size = size #width, height
         self.level = level
         self.position = Vector(*position)
+        self.rotation = 0
 
         self.screen = pygame.display.set_mode(size)
         self.clock = pygame.time.Clock()
@@ -64,22 +63,39 @@ class View(object):
 
         self.font = pygame.font.Font(None, 25)
 
+    def get_cursor_position_on_screen(self):
+        cp = self.position
+        if self.rotation == 0:
+            return cp
+        elif self.rotation == 1:
+            return Vector(cp.y, self.level.xsize-cp.x-1, cp.z)
+        elif self.rotation == 2:
+            return Vector(self.level.xsize-cp.x-1, self.level.ysize-cp.y-1, cp.z)
+        elif self.rotation == 3:
+            return Vector(self.level.ysize-cp.y-1, cp.x, cp.z)
+
     def draw(self):
         cx, cy = self.get_screen_center()
-        posx, posy, posz = self.position.x, self.position.y, self.position.z
         self.screen.fill(BLACK)
         rect=self.block_rect
         for z in range(self.level.zsize):
             for y in range(self.level.ysize):
                 for x in range(self.level.xsize):
 
-                    bl = self.level.get_block(Vector(x, y, z))
+                    rx, ry = rotate_xypos(x, y, self.level.xsize-1, self.level.ysize-1,
+                                        (self.rotation)%4)
+                    bl = self.level.get_block(Vector(rx, ry, z))
+                    #posx, posy = rotate_xypos(self.position.x, self.position.y,
+                    #                          self.level.xsize-1, self.level.ysize-1,
+                    #                          self.rotation)
+                    #posz = self.position.z
+                    posx, posy, posz = self.get_cursor_position_on_screen().tuple()
 
                     # an offscreen bitmap to draw the block into
                     surf = pygame.Surface(rect.size, pygame.SRCALPHA)
 
-                    rect.center = (cx-self.block_width//2*(posx-posy-x+y),
-                                   cy-self.block_depth//2*(posy+posx-x-y)-self.block_height*(z-posz))
+                    rect.center = (cx+self.block_width//2*(+posx-posy-x+y),
+                                   cy+self.block_depth//2*(-posx-posy+x+y)-self.block_height*(z-posz))
                     # Check that we're not drawing outside the screen, which would be
                     # a waste of time.
                     if rect.clip(self.screen.get_rect()).size != (0,0):
@@ -88,9 +104,9 @@ class View(object):
                             surf.blit(self.floor_img, (0,0))
 
                         # draw walls from the back
-                        for w in (0,1,7):
+                        for w in [(r+self.rotation*2)%8 for r in (0,1,7)]:
                             if bl.walls.has_key(w):
-                                surf.blit(self.thinwalls[w], (0,0))
+                                surf.blit(self.thinwalls[(w-self.rotation*2)%8], (0,0))
 
                         # draw higher floor (if any)
                         if bl.floor == 0.5:
@@ -99,18 +115,18 @@ class View(object):
                             surf.blit(self.block_img, (0,0))
 
                         # draw walls in front
-                        for w in (2,6,3,5,4):
+                        for w in [(r+self.rotation*2)%8 for r in (2,6,3,5,4)]:
                             if bl.walls.has_key(w):
-                                surf.blit(self.thinwalls[w], (0,0))
+                                surf.blit(self.thinwalls[(w-self.rotation*2)%8], (0,0))
 
                         #if x+y > self.position.x+self.position.y:
                         #    surf.set_alpha(127)
                         self.screen.blit(surf, rect)
 
-                        if (x, y, z) == (self.position.x, self.position.y, self.position.z):
+                        if (rx, ry, z) == (self.position.x, self.position.y, self.position.z):
                             print "drawing cursor"
-                            rect.center = (cx-self.block_width//2*(posx-posy-x+y),
-                                           cy-self.block_depth//2*(posy+posx-x-y)-self.block_height*(z-posz))
+                            #rect.center = (cx-self.block_width//2*(posx-posy-x+y),
+                            #               cy-self.block_depth//2*(posy+posx-x-y)-self.block_height*(z-posz))
 
                             self.screen.blit(self.cursor_img, rect)
 
@@ -144,18 +160,23 @@ while 1:
             bl = lv.get_block(v.position)
             direction = -1
 
-            if event.key == pygame.K_DOWN:
+            if event.key == pygame.K_LEFT:
                 v.position.x = constrain(v.position.x+1, 0, lv.xsize-1)
-            elif event.key == pygame.K_UP:
-                v.position.x = constrain(v.position.x-1, 0, lv.xsize-1)
-            elif event.key == pygame.K_LEFT:
-                v.position.y = constrain(v.position.y+1, 0, lv.ysize-1)
             elif event.key == pygame.K_RIGHT:
+                v.position.x = constrain(v.position.x-1, 0, lv.xsize-1)
+            elif event.key == pygame.K_DOWN:
+                v.position.y = constrain(v.position.y+1, 0, lv.ysize-1)
+            elif event.key == pygame.K_UP:
                 v.position.y = constrain(v.position.y-1, 0, lv.ysize-1)
             elif event.key == pygame.K_PAGEUP:
                 v.position.z = constrain(v.position.z+1, 0, lv.zsize-1)
             elif event.key == pygame.K_PAGEDOWN:
                 v.position.z = constrain(v.position.z-1, 0, lv.zsize-1)
+
+            elif event.key == pygame.K_r:
+                v.rotation = (v.rotation+1)%4
+            elif event.key == pygame.K_t:
+                v.rotation = (v.rotation-1)%4
 
             elif event.key == pygame.K_SPACE:
                 if bl.floor == None:
@@ -186,10 +207,11 @@ while 1:
                 direction = 7
 
             if direction > -1:
-                if bl.get_wall(direction) is not None:
-                    bl.remove_wall(direction)
+                rotdir = (direction+v.rotation*2)%8
+                if bl.get_wall(rotdir) is not None:
+                    bl.remove_wall(rotdir)
                 else:
-                    bl.set_wall(direction, 1)
+                    bl.set_wall(rotdir, 1)
 
 
             v.draw()
