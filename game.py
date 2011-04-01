@@ -21,47 +21,12 @@ class View(object):
         self.screen = pygame.display.set_mode(size)
         self.clock = pygame.time.Clock()
 
-        self.block_img = pygame.image.load("gfx/block_textured.png")
-        self.block_half_img = pygame.image.load("gfx/block_half.png")
-        self.floor_img = pygame.image.load("gfx/floor.png")
-        self.block_rect = self.block_img.get_rect()
-        self.block_height = 36
-        self.block_width = 64
-        self.block_depth = 32
-
-        self.wall1_img = pygame.image.load("gfx/wall1.png")
-        self.wall2_img = pygame.image.load("gfx/wall2.png")
-        self.corner_img = pygame.image.load("gfx/corner.png")
-        self.concrete_texture = (
-            pygame.image.load("gfx/block_textured_leftwall.png").convert_alpha(),
-            pygame.image.load("gfx/block_textured_rightwall.png").convert_alpha(),
-            pygame.image.load("gfx/block_textured_top.png").convert_alpha()
-            )
-
-        self.thinwalls = [
-            pygame.image.load("gfx/thinwall0.png").convert(),
-            pygame.image.load("gfx/thinwall1.png").convert(),
-            pygame.image.load("gfx/thinwall2.png").convert(),
-            pygame.image.load("gfx/thinwall3.png").convert(),
-            pygame.image.load("gfx/thinwall4.png").convert(),
-            pygame.image.load("gfx/thinwall5.png").convert(),
-            pygame.image.load("gfx/thinwall6.png").convert(),
-            pygame.image.load("gfx/thinwall7.png").convert()
-            ]
-
-        texture_wall(self.thinwalls[0], self.concrete_texture, 0, 1)
-        texture_wall(self.thinwalls[1], self.concrete_texture, 1, 1)
-        texture_wall(self.thinwalls[2], self.concrete_texture, 2, 1)
-        texture_wall(self.thinwalls[3], self.concrete_texture, 3, 1)
-        texture_wall(self.thinwalls[4], self.concrete_texture, 4, 1)
-        texture_wall(self.thinwalls[5], self.concrete_texture, 5, 1)
-        texture_wall(self.thinwalls[6], self.concrete_texture, 6, 1)
-        texture_wall(self.thinwalls[7], self.concrete_texture, 7, 1)
-
-        self.cursor_img = pygame.image.load("gfx/cursor.png")
-        self.cursor_rect = self.block_img.get_rect()
+        self.graphics = data.Graphics()
 
         self.font = pygame.font.Font(None, 25)
+
+        self.character_pos = [(0,3,0), (5, 5, 0), (7,2,0)]
+
 
     def get_cursor_position_on_screen(self):
         cp = self.position
@@ -89,7 +54,7 @@ class View(object):
     def draw(self):
         cx, cy = self.get_screen_center()
         self.screen.fill(BLACK)
-        rect=self.block_rect
+        rect=self.graphics.block_rect
         for z in range(self.level.zsize):
             for y in range(self.level.ysize):
                 for x in range(self.level.xsize):
@@ -106,8 +71,9 @@ class View(object):
                     # an offscreen bitmap to draw the block into
                     surf = pygame.Surface(rect.size, pygame.SRCALPHA)
 
-                    rect.center = (cx+self.block_width//2*(+posx-posy-x+y),
-                                   cy+self.block_depth//2*(-posx-posy+x+y)-self.block_height*(z-posz))
+                    rect.center = (cx+self.graphics.block_width//2*(+posx-posy-x+y),
+                                   cy+self.graphics.block_depth//2*(-posx-posy+x+y)-\
+                                       self.graphics.block_height*(z-posz))
                     # Check that we're not drawing outside the screen, which would be
                     # a waste of time.
                     if rect.clip(self.screen.get_rect()).size != (0,0):
@@ -118,18 +84,23 @@ class View(object):
                         # draw walls from the back
                         for w in [(r+self.rotation*2)%8 for r in (0,1,7)]:
                             if bl.walls.has_key(w):
-                                surf.blit(self.thinwalls[(w-self.rotation*2)%8], (0,0))
+                                surf.blit(self.graphics.thinwalls[(w-self.rotation*2)%8], (0,0))
 
                         # draw higher floor (if any)
                         if bl.floor == 0.5:
-                            surf.blit(self.block_half_img, (0,0))
+                            surf.blit(self.graphics.block_half_img, (0,0))
                         elif bl.floor == 1:
-                            surf.blit(self.block_img, (0,0))
+                            surf.blit(self.graphics.block_img, (0,0))
+
+                        if (x, y, z) in self.character_pos:
+                            char_img = self.graphics.stand_anim[3]
+                            surf.blit(char_img, ((rect.width - char_img.get_width())/2,
+                                                 (rect.height - char_img.get_height())/2-10))
 
                         # draw walls in front
                         for w in [(r+self.rotation*2)%8 for r in (2,6,3,5,4)]:
                             if bl.walls.has_key(w):
-                                surf.blit(self.thinwalls[(w-self.rotation*2)%8], (0,0))
+                                surf.blit(self.graphics.thinwalls[(w-self.rotation*2)%8], (0,0))
 
                         #if x+y > self.position.x+self.position.y:
                         #    surf.set_alpha(127)
@@ -140,7 +111,7 @@ class View(object):
                             #rect.center = (cx-self.block_width//2*(posx-posy-x+y),
                             #               cy-self.block_depth//2*(posy+posx-x-y)-self.block_height*(z-posz))
 
-                            self.screen.blit(self.cursor_img, rect)
+                            self.screen.blit(self.graphics.cursor_img, rect)
 
         #print v.position
         postext = self.font.render("%d, %d, %d"%v.position.tuple(), 1, (255,255,0))
