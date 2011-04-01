@@ -74,6 +74,18 @@ class View(object):
         elif self.rotation == 3:
             return Vector(self.level.ysize-cp.y-1, cp.x, cp.z)
 
+    def move_cursor_on_screen(self, dx=0, dy=0, dz=0):
+        if self.rotation == 1:
+            dx, dy = -dy, dx
+        if self.rotation == 2:
+            dx, dy = -dx, -dy
+        if self.rotation == 3:
+            dx, dy = dy, -dx
+        v.position.x = constrain(v.position.x+dx, 0, lv.xsize-1)
+        v.position.y = constrain(v.position.y+dy, 0, lv.ysize-1)
+        v.position.z = constrain(v.position.z+dz, 0, lv.zsize-1)
+        return v.position
+
     def draw(self):
         cx, cy = self.get_screen_center()
         self.screen.fill(BLACK)
@@ -85,11 +97,11 @@ class View(object):
                     rx, ry = rotate_xypos(x, y, self.level.xsize-1, self.level.ysize-1,
                                         (self.rotation)%4)
                     bl = self.level.get_block(Vector(rx, ry, z))
-                    #posx, posy = rotate_xypos(self.position.x, self.position.y,
-                    #                          self.level.xsize-1, self.level.ysize-1,
-                    #                          self.rotation)
-                    #posz = self.position.z
-                    posx, posy, posz = self.get_cursor_position_on_screen().tuple()
+                    posx, posy = rotate_xypos(self.position.x, self.position.y,
+                                              self.level.xsize-1, self.level.ysize-1,
+                                              (-self.rotation)%4)
+                    posz = self.position.z
+                    #posx, posy, posz = self.get_cursor_position_on_screen().tuple()
 
                     # an offscreen bitmap to draw the block into
                     surf = pygame.Surface(rect.size, pygame.SRCALPHA)
@@ -138,6 +150,8 @@ class View(object):
     def get_screen_center(self):
         return self.size[0]//2, self.size[1]//2
 
+
+
 lv = data.Level(size=(10,10,10))
 
 for i in range(10):
@@ -161,17 +175,17 @@ while 1:
             direction = -1
 
             if event.key == pygame.K_LEFT:
-                v.position.x = constrain(v.position.x+1, 0, lv.xsize-1)
+                v.move_cursor_on_screen(dx=1)
             elif event.key == pygame.K_RIGHT:
-                v.position.x = constrain(v.position.x-1, 0, lv.xsize-1)
+                v.move_cursor_on_screen(dx=-1)
             elif event.key == pygame.K_DOWN:
-                v.position.y = constrain(v.position.y+1, 0, lv.ysize-1)
+                v.move_cursor_on_screen(dy=1)
             elif event.key == pygame.K_UP:
-                v.position.y = constrain(v.position.y-1, 0, lv.ysize-1)
+                v.move_cursor_on_screen(dy=-1)
             elif event.key == pygame.K_PAGEUP:
-                v.position.z = constrain(v.position.z+1, 0, lv.zsize-1)
+                v.move_cursor_on_screen(dz=1)
             elif event.key == pygame.K_PAGEDOWN:
-                v.position.z = constrain(v.position.z-1, 0, lv.zsize-1)
+                v.move_cursor_on_screen(dz=-1)
 
             elif event.key == pygame.K_r:
                 v.rotation = (v.rotation+1)%4
@@ -187,7 +201,6 @@ while 1:
                     bl.floor = 0
                 elif bl.floor == 0:
                     bl.floor = None
-
 
             elif event.key in (pygame.K_e, pygame.K_KP9):
                 direction = 0
@@ -212,7 +225,6 @@ while 1:
                     bl.remove_wall(rotdir)
                 else:
                     bl.set_wall(rotdir, 1)
-
 
             v.draw()
 
