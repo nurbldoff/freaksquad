@@ -6,5 +6,7 @@ WHAT IS IT?
 CONTROLS
        arrow keys  move the cursor/subcursor in the plane
         pgup/down  move the cursor/subcursor vertically
-           numpad  put/remove a wall in one direction (se below), at the cursor
-	    space  toggle floor: block/half-block/nothing
+       numpad, or  
+         qweadzxc  put/remove a wall in one direction (se below), at the cursor
+	    space  toggle floor: block/half-block/floor/nothing
+	      r/t  rotate the whole view by +/-90 degrees

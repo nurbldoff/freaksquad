@@ -88,6 +88,7 @@ class Graphics(object):
         for i in range(len(self.thinwalls)):
             self.texture_wall(self.thinwalls[i], self.concrete_texture, i, 1)
 
+        # XCOM graphics found on the internets. Included only as placeholders!
         self.run_anim = [pygame.transform.scale2x(pygame.image.load("gfx/xcom0pm_run%d.tga"%(i+1))) for i in range(8)]
         self.stand_anim = [pygame.transform.scale2x(pygame.image.load("gfx/xcom0pm_stand%d.tga"%(i+1))) for i in range(8)]
 

@@ -79,7 +79,7 @@ class View(object):
                     if rect.clip(self.screen.get_rect()).size != (0,0):
 
                         if bl.floor == 0:
-                            surf.blit(self.floor_img, (0,0))
+                            surf.blit(self.graphics.floor_img, (0,0))
 
                         # draw walls from the back
                         for w in [(r+self.rotation*2)%8 for r in (0,1,7)]:
