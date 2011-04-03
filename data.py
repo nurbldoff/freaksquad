@@ -1,4 +1,5 @@
 from random import randint
+import os
 import pygame
 from utils import blit_mask, clip_masks
 
@@ -65,17 +66,25 @@ class Block(object):
 
 
 class Texture(object):
+    """
+    A container for a texture. Needs three faces (left, right and top) and a
+    unique name for identification
+    """
+
     def __init__(self, filenames, name):
         self.name = name
-        self.load_images(filenames, name)
+        self.load_image(filenames, name)
         self.cache = {}
         self.thinwalls = [pygame.image.load("gfx/thinwall%d.png"%i).convert() for i in range(8)]
         self.topmask = pygame.image.load("gfx/block_top_white.png").convert_alpha()
         #for i in range(len(self.thinwalls)):
         #    self.get_texture("concrete").make_wall(self.thinwalls[i], i, 1)
 
-    def load_images(self, files, name):
-        self.images = ([pygame.image.load(f).convert_alpha() for f in files])
+    def load_image(self, imgfile, name):
+        img = pygame.image.load(imgfile).convert_alpha()
+        imgwidth = img.get_width()/3
+        self.images = [img.subsurface(pygame.Rect(i*imgwidth,0,imgwidth,img.get_height()))
+                                      for i in range(3)]
 
     def make_wall(self, direction, thickness):
         """
@@ -120,7 +129,7 @@ class Texture(object):
             trect.left = srect.width/2
             surf.blit(rightwall, (thickness*2, -srect.width/4+thickness), trect)
             topmask, toprect = clip_masks((self.topmask, self.topmask),
-                                ((0,0),(-srect.width+2*thickness, 0)))
+                                ((0,0),(-srect.width+4*thickness, 0)))
             blit_mask(top, surf, toprect.topleft, topmask, toprect)
 
         if direction == 3:
@@ -170,7 +179,7 @@ class Texture(object):
             trect.left = srect.width - thickness*2
             surf.blit(rightwall, trect.topleft, trect)
             topmask, toprect = clip_masks((self.topmask, self.topmask),
-                                ((0,0),(srect.width-2*thickness, 0)))
+                                ((0,0),(srect.width-4*thickness, 0)))
             blit_mask(top, surf, toprect.topleft, topmask, toprect)
 
         if direction == 7:
@@ -195,6 +204,7 @@ class Graphics(object):
     """
     def __init__(self):
         self.textures = []
+        self.path = "gfx/textures"
 
         self.block_img = pygame.image.load("gfx/block_textured.png")
         self.block_half_img = pygame.image.load("gfx/block_half.png")
@@ -204,10 +214,13 @@ class Graphics(object):
         self.block_width = 64
         self.block_depth = 32
 
-        self.load_texture(("gfx/block_textured_leftwall.png",
-                           "gfx/block_textured_rightwall.png",
-                           "gfx/block_textured_top.png"), "concrete")
-
+        # self.load_texture(("gfx/block_textured_leftwall.png",
+        #                    "gfx/block_textured_rightwall.png",
+        #                    "gfx/block_textured_top.png"), "concrete")
+        # self.load_texture(("gfx/test_texture_left.png",
+        #                    "gfx/test_texture_right.png",
+        #                    "gfx/test_texture_top.png"), "test")
+        self.load_all_textures()
 
         # UFO/XCOM graphics found on the internets. Included only as placeholders!
         self.run_anim = [pygame.transform.scale2x(pygame.image.load("gfx/xcom0pm_run%d.tga"%(i+1))) for i in range(8)]
@@ -216,8 +229,17 @@ class Graphics(object):
         self.cursor_img = pygame.image.load("gfx/cursor.png")
         self.cursor_rect = self.block_img.get_rect()
 
-    def load_texture(self, files, name):
-        self.textures.append(Texture(files, name))
+    def load_texture(self, imgfile, name):
+        self.textures.append(Texture(imgfile, name))
+
+    def load_all_textures(self):
+        fs = os.listdir(self.path)
+        for f in filter(lambda x: x.endswith(".png"), fs):
+            txname = f.split(".")[0]
+            tx = self.get_texture(txname)
+            if not tx is None:
+                self.textures.remove(tx)
+            self.load_texture(os.path.join(self.path, f), txname)
 
     def get_texture(self, name):
         # This should be something more efficient
@@ -225,6 +247,9 @@ class Graphics(object):
             if t.name == name:
                 return t
         return None
+
+    def get_texture_names(self):
+        return [texture.name for texture in self.textures]
 
     def get_frame(self, img, n, ntot):
         return img.subsurface( pygame.Rect(n*img.width/ntot, 0, img.width/ntot, img.height) )

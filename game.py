@@ -24,6 +24,8 @@ class View(object):
         self.clock = pygame.time.Clock()
 
         self.graphics = data.Graphics()
+        self.textures = self.graphics.get_texture_names()
+        self.texture = self.textures[0]
 
         self.font = pygame.font.Font(None, 25)
 
@@ -76,7 +78,7 @@ class View(object):
                             # draw walls from the back
                             for w in [(r+self.rotation*2)%8 for r in (0,1,7)]:
                                 if bl.walls.has_key(w):
-                                    surf.blit(self.graphics.get_texture("concrete").make_wall((w-self.rotation*2)%8, 1), (0,0))
+                                    surf.blit(self.graphics.get_texture(self.texture).make_wall((w-self.rotation*2)%8, 1), (0,0))
 
                             # draw higher floor (if any)
                             if bl.floor == 0.5:
@@ -93,7 +95,7 @@ class View(object):
                             # draw walls in front
                             for w in [(r+self.rotation*2)%8 for r in (2,6,3,5,4)]:
                                 if bl.walls.has_key(w):
-                                    surf.blit(self.graphics.get_texture("concrete").make_wall((w-self.rotation*2)%8, 1), (0,0))
+                                    surf.blit(self.graphics.get_texture(self.texture).make_wall((w-self.rotation*2)%8, 1), (0,0))
                                     #surf.blit(self.graphics.thinwalls[(w-self.rotation*2)%8], (0,0))
 
                             #if x+y > self.position.x+self.position.y:
@@ -166,6 +168,13 @@ while 1:
                     bl.floor = 0
                 elif bl.floor == 0:
                     bl.floor = None
+
+            elif event.key == pygame.K_f:
+                v.texture = v.textures[(v.textures.index(v.texture) + 1)%len(v.textures)]
+
+            elif event.key == pygame.K_TAB:
+                v.graphics.load_all_textures()
+                v.textures = v.graphics.get_texture_names()
 
             elif event.key in (pygame.K_e, pygame.K_KP9):
                 direction = 0
