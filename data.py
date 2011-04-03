@@ -1,5 +1,6 @@
 from random import randint
 import pygame
+from utils import blit_mask, clip_masks
 
 class Level(object):
     def __init__(self, size=(10,10,3)):
@@ -62,15 +63,16 @@ class Block(object):
             if self.walls.has_key((direction-1)%8):
                 del self.walls[(direction-1)%8]
 
+
 class Texture(object):
     def __init__(self, filenames, name):
         self.name = name
         self.load_images(filenames, name)
         self.cache = {}
         self.thinwalls = [pygame.image.load("gfx/thinwall%d.png"%i).convert() for i in range(8)]
+        self.topmask = pygame.image.load("gfx/block_top_white.png").convert_alpha()
         #for i in range(len(self.thinwalls)):
         #    self.get_texture("concrete").make_wall(self.thinwalls[i], i, 1)
-
 
     def load_images(self, files, name):
         self.images = ([pygame.image.load(f).convert_alpha() for f in files])
@@ -93,6 +95,9 @@ class Texture(object):
             surf.blit(leftwall, (srect.width/2-thickness*2, -srect.width/4+thickness), trect)
             trect.left = srect.width - thickness*2
             surf.blit(rightwall, (srect.width/2, -srect.width/4+thickness), trect)
+            topmask, toprect = clip_masks((self.topmask, self.topmask),
+                                ((0,0),(0, -srect.width/2+2*thickness)))
+            blit_mask(top, surf, toprect.topleft, topmask, toprect)
 
         if direction == 1:
             trect = leftwall.get_rect()
@@ -102,6 +107,11 @@ class Texture(object):
             trect.left = 0
             trect.width = thickness*2
             surf.blit(leftwall, (thickness*2, -thickness), trect)
+            topmask, toprect = clip_masks((self.topmask, self.topmask, self.topmask),
+                                ((-2*thickness, thickness),(2*thickness, -thickness),
+                                 (-srect.width/2+2*thickness, -srect.width/4+thickness)))
+            blit_mask(top, surf, toprect.topleft, topmask, toprect)
+            print toprect
 
         if direction == 2:
             trect = leftwall.get_rect()
@@ -109,6 +119,9 @@ class Texture(object):
             surf.blit(leftwall, (0,0), trect)
             trect.left = srect.width/2
             surf.blit(rightwall, (thickness*2, -srect.width/4+thickness), trect)
+            topmask, toprect = clip_masks((self.topmask, self.topmask),
+                                ((0,0),(-srect.width+2*thickness, 0)))
+            blit_mask(top, surf, toprect.topleft, topmask, toprect)
 
         if direction == 3:
             trect = leftwall.get_rect()
@@ -118,6 +131,11 @@ class Texture(object):
             trect.left = srect.width/2
             trect.width = thickness*2
             surf.blit(rightwall, (srect.width/2-thickness*2, -thickness), trect)
+            topmask, toprect = clip_masks((self.topmask, self.topmask, self.topmask),
+                                ((2*thickness, thickness),(-2*thickness, -thickness),
+                                 (-srect.width/2+2*thickness, srect.width/4-thickness)))
+            blit_mask(top, surf, toprect.topleft, topmask, toprect)
+
 
         if direction == 4:
             trect = leftwall.get_rect()
@@ -126,7 +144,9 @@ class Texture(object):
             surf.blit(leftwall, trect.topleft, trect)
             trect.left = srect.width/2
             surf.blit(rightwall, trect.topleft, trect)
-
+            topmask, toprect = clip_masks((self.topmask, self.topmask),
+                                ((0,0),(0, srect.width/2-2*thickness)))
+            blit_mask(top, surf, toprect.topleft, topmask, toprect)
 
         if direction == 5:
             trect = leftwall.get_rect()
@@ -136,6 +156,11 @@ class Texture(object):
             trect.left = srect.width/2-thickness*2
             trect.width = thickness*2
             surf.blit(leftwall, (srect.width/2, -thickness), trect)
+            topmask, toprect = clip_masks((self.topmask, self.topmask, self.topmask),
+                                ((-2*thickness, thickness),(2*thickness, -thickness),
+                                 (srect.width/2-2*thickness, srect.width/4-thickness)))
+            blit_mask(top, surf, toprect.topleft, topmask, toprect)
+
 
         if direction == 6:
             trect = leftwall.get_rect()
@@ -144,6 +169,9 @@ class Texture(object):
             surf.blit(leftwall, (srect.width-2*2*thickness, -srect.width/4+thickness), trect)
             trect.left = srect.width - thickness*2
             surf.blit(rightwall, trect.topleft, trect)
+            topmask, toprect = clip_masks((self.topmask, self.topmask),
+                                ((0,0),(srect.width-2*thickness, 0)))
+            blit_mask(top, surf, toprect.topleft, topmask, toprect)
 
         if direction == 7:
             trect = leftwall.get_rect()
@@ -153,6 +181,10 @@ class Texture(object):
             trect.width = srect.width/2
             trect.left = srect.width-thickness*2
             surf.blit(rightwall, (srect.width-2*thickness*2, -thickness), trect)
+            topmask, toprect = clip_masks((self.topmask, self.topmask, self.topmask),
+                                ((2*thickness, thickness),(-2*thickness, -thickness),
+                                 (srect.width/2-2*thickness, -srect.width/4+thickness)))
+            blit_mask(top, surf, toprect.topleft, topmask, toprect)
 
         self.cache[(direction, thickness)] = surf
         return surf

@@ -6,7 +6,7 @@ from random import randint
 
 import data
 from vector import Vector
-from utils import constrain, texture_wall, rotate_xypos
+from utils import constrain, rotate_xypos
 
 # colors
 BLACK = 0,0,0
@@ -52,6 +52,7 @@ class View(object):
                     rx, ry = rotate_xypos(x, y, self.level.xsize-1, self.level.ysize-1,
                                         (self.rotation)%4)
                     bl = self.level.get_block(Vector(rx, ry, z))
+
                     posx, posy = rotate_xypos(self.position.x, self.position.y,
                                               self.level.xsize-1, self.level.ysize-1,
                                               (-self.rotation)%4)
@@ -67,35 +68,37 @@ class View(object):
                     # a waste of time.
                     if rect.clip(self.screen.get_rect()).size != (0,0):
 
-                        if bl.floor == 0:
-                            surf.blit(self.graphics.floor_img, (0,0))
+                        if bl is not None:
 
-                        # draw walls from the back
-                        for w in [(r+self.rotation*2)%8 for r in (0,1,7)]:
-                            if bl.walls.has_key(w):
-                                surf.blit(self.graphics.get_texture("concrete").make_wall((w-self.rotation*2)%8, 1), (0,0))
+                            if bl.floor == 0:
+                                surf.blit(self.graphics.floor_img, (0,0))
 
-                        # draw higher floor (if any)
-                        if bl.floor == 0.5:
-                            surf.blit(self.graphics.block_half_img, (0,0))
-                        elif bl.floor == 1:
-                            surf.blit(self.graphics.block_img, (0,0))
+                            # draw walls from the back
+                            for w in [(r+self.rotation*2)%8 for r in (0,1,7)]:
+                                if bl.walls.has_key(w):
+                                    surf.blit(self.graphics.get_texture("concrete").make_wall((w-self.rotation*2)%8, 1), (0,0))
 
-                        # just add some fake dudes
-                        if (rx, ry, z) in self.character_pos:
-                            char_img = self.graphics.stand_anim[(rx+ry+z+2*self.rotation)%8]
-                            surf.blit(char_img, ((rect.width - char_img.get_width())/2,
-                                                 (rect.height - char_img.get_height())/2-10))
+                            # draw higher floor (if any)
+                            if bl.floor == 0.5:
+                                surf.blit(self.graphics.block_half_img, (0,0))
+                            elif bl.floor == 1:
+                                surf.blit(self.graphics.block_img, (0,0))
 
-                        # draw walls in front
-                        for w in [(r+self.rotation*2)%8 for r in (2,6,3,5,4)]:
-                            if bl.walls.has_key(w):
-                                surf.blit(self.graphics.get_texture("concrete").make_wall((w-self.rotation*2)%8, 1), (0,0))
-                                #surf.blit(self.graphics.thinwalls[(w-self.rotation*2)%8], (0,0))
+                            # just add some fake dudes
+                            if (rx, ry, z) in self.character_pos:
+                                char_img = self.graphics.stand_anim[(rx+ry+z+2*self.rotation)%8]
+                                surf.blit(char_img, ((rect.width - char_img.get_width())/2,
+                                                     (rect.height - char_img.get_height())/2-10))
 
-                        #if x+y > self.position.x+self.position.y:
-                        #    surf.set_alpha(127)
-                        self.screen.blit(surf, rect)
+                            # draw walls in front
+                            for w in [(r+self.rotation*2)%8 for r in (2,6,3,5,4)]:
+                                if bl.walls.has_key(w):
+                                    surf.blit(self.graphics.get_texture("concrete").make_wall((w-self.rotation*2)%8, 1), (0,0))
+                                    #surf.blit(self.graphics.thinwalls[(w-self.rotation*2)%8], (0,0))
+
+                            #if x+y > self.position.x+self.position.y:
+                            #    surf.set_alpha(127)
+                            self.screen.blit(surf, rect)
 
                         if (rx, ry, z) == (self.position.x, self.position.y, self.position.z):
                             print "drawing cursor"

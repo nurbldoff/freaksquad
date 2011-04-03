@@ -1,3 +1,5 @@
+import pygame
+
 def constrain(value, minlim, maxlim):
     "Return the value if it lies between max and min inclusive, otherwise return the closest of max ang min."
     return max(minlim, min(maxlim, value))
@@ -31,77 +33,21 @@ def get_wall_offset(n):
         return (0.25, -0.25)
 
 
-def texture_wall(surf, texture, direction, thickness):
-    """
-    Cuts the appropriate parts from a cube texture to build a wall section.
-    """
-    leftwall, rightwall, top = texture
-    srect = surf.get_rect()
-    if direction == 0:
-        trect = leftwall.get_rect()
-        trect.width = thickness*2
-        surf.blit(leftwall, (srect.width/2-thickness*2, -srect.width/4+thickness), trect)
-        trect.left = srect.width - thickness*2
-        surf.blit(rightwall, (srect.width/2, -srect.width/4+thickness), trect)
+def blit_mask(source, dest, destpos, mask, maskrect):
+    tmp = source.copy()
+    tmp.blit(mask, maskrect.topleft, maskrect, special_flags=pygame.BLEND_RGBA_MULT)
+    #mrect = mask.get_rect()
+    #mrect.topleft = maskpos
+    dest.blit(tmp, destpos, dest.get_rect().clip(maskrect))
 
-    if direction == 1:
-        trect = leftwall.get_rect()
-        trect.width = srect.width/2 - 2*thickness*2
-        trect.left = srect.width/2+thickness*2
-        surf.blit(rightwall, (2*thickness*2, -srect.width/4+thickness),trect)
-        trect.left = 0
-        trect.width = thickness*2
-        surf.blit(leftwall, (thickness*2, -thickness), trect)
-
-    if direction == 2:
-        trect = leftwall.get_rect()
-        trect.width = thickness*2
-        surf.blit(leftwall, (0,0), trect)
-        trect.left = srect.width/2
-        surf.blit(rightwall, (thickness*2, -srect.width/4+thickness), trect)
-
-    if direction == 3:
-        trect = leftwall.get_rect()
-        trect.width = srect.width/2 - 2*thickness*2
-        trect.left = thickness*2
-        surf.blit(leftwall, (thickness*2, 0), trect)
-        trect.left = srect.width/2
-        trect.width = thickness*2
-        surf.blit(rightwall, (srect.width/2-thickness*2, -thickness), trect)
-
-    if direction == 4:
-        trect = leftwall.get_rect()
-        trect.width = thickness*2
-        trect.left = srect.width/2 - 2*thickness
-        surf.blit(leftwall, trect.topleft, trect)
-        trect.left = srect.width/2
-        surf.blit(rightwall, trect.topleft, trect)
-
-
-    if direction == 5:
-        trect = leftwall.get_rect()
-        trect.width = srect.width/2 - 2*thickness*2
-        trect.left = srect.width/2+thickness*2
-        surf.blit(rightwall, (srect.width/2+thickness*2, 0), trect)
-        trect.left = srect.width/2-thickness*2
-        trect.width = thickness*2
-        surf.blit(leftwall, (srect.width/2, -thickness), trect)
-
-    if direction == 6:
-        trect = leftwall.get_rect()
-        trect.width = thickness*2
-        trect.left = srect.width/2 - 2*thickness
-        surf.blit(leftwall, (srect.width-2*2*thickness, -srect.width/4+thickness), trect)
-        trect.left = srect.width - thickness*2
-        surf.blit(rightwall, trect.topleft, trect)
-
-    if direction == 7:
-        trect = leftwall.get_rect()
-        trect.width = srect.width/2 - 2*thickness*2
-        trect.left = thickness*2
-        surf.blit(leftwall, (srect.width/2, -srect.width/4+thickness), trect)
-        trect.width = srect.width/2
-        trect.left = srect.width-thickness*2
-        surf.blit(rightwall, (srect.width-2*thickness*2, -thickness), trect)
-
-
+def clip_masks(masks, positions):
+    "return the intersection of several masks"
+    tmp = masks[0].copy()
+    rect = tmp.get_rect()
+    frect = rect.copy()
+    for m, p in zip(masks, positions):
+        tmp.blit(m, p, special_flags=pygame.BLEND_RGBA_MULT)
+        tmprect = rect.copy()
+        tmprect.topleft = p
+        frect = frect.clip(tmprect)
+    return tmp, frect
