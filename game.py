@@ -2,6 +2,8 @@ from __future__ import division
 
 from collections import namedtuple
 import sys, pygame
+from random import randint
+
 import data
 from vector import Vector
 from utils import constrain, texture_wall, rotate_xypos
@@ -26,18 +28,6 @@ class View(object):
         self.font = pygame.font.Font(None, 25)
 
         self.character_pos = [(0,3,0), (5, 5, 0), (7,2,0)]
-
-
-    def get_cursor_position_on_screen(self):
-        cp = self.position
-        if self.rotation == 0:
-            return cp
-        elif self.rotation == 1:
-            return Vector(cp.y, self.level.xsize-cp.x-1, cp.z)
-        elif self.rotation == 2:
-            return Vector(self.level.xsize-cp.x-1, self.level.ysize-cp.y-1, cp.z)
-        elif self.rotation == 3:
-            return Vector(self.level.ysize-cp.y-1, cp.x, cp.z)
 
     def move_cursor_on_screen(self, dx=0, dy=0, dz=0):
         if self.rotation == 1:
@@ -66,7 +56,6 @@ class View(object):
                                               self.level.xsize-1, self.level.ysize-1,
                                               (-self.rotation)%4)
                     posz = self.position.z
-                    #posx, posy, posz = self.get_cursor_position_on_screen().tuple()
 
                     # an offscreen bitmap to draw the block into
                     surf = pygame.Surface(rect.size, pygame.SRCALPHA)
@@ -84,7 +73,7 @@ class View(object):
                         # draw walls from the back
                         for w in [(r+self.rotation*2)%8 for r in (0,1,7)]:
                             if bl.walls.has_key(w):
-                                surf.blit(self.graphics.thinwalls[(w-self.rotation*2)%8], (0,0))
+                                surf.blit(self.graphics.get_texture("concrete").make_wall((w-self.rotation*2)%8, 1), (0,0))
 
                         # draw higher floor (if any)
                         if bl.floor == 0.5:
@@ -92,15 +81,17 @@ class View(object):
                         elif bl.floor == 1:
                             surf.blit(self.graphics.block_img, (0,0))
 
-                        if (x, y, z) in self.character_pos:
-                            char_img = self.graphics.stand_anim[3]
+                        # just add some fake dudes
+                        if (rx, ry, z) in self.character_pos:
+                            char_img = self.graphics.stand_anim[(rx+ry+z+2*self.rotation)%8]
                             surf.blit(char_img, ((rect.width - char_img.get_width())/2,
                                                  (rect.height - char_img.get_height())/2-10))
 
                         # draw walls in front
                         for w in [(r+self.rotation*2)%8 for r in (2,6,3,5,4)]:
                             if bl.walls.has_key(w):
-                                surf.blit(self.graphics.thinwalls[(w-self.rotation*2)%8], (0,0))
+                                surf.blit(self.graphics.get_texture("concrete").make_wall((w-self.rotation*2)%8, 1), (0,0))
+                                #surf.blit(self.graphics.thinwalls[(w-self.rotation*2)%8], (0,0))
 
                         #if x+y > self.position.x+self.position.y:
                         #    surf.set_alpha(127)
