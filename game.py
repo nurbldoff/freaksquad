@@ -78,7 +78,12 @@ class View(object):
                             # draw walls from the back
                             for w in [(r+self.rotation*2)%8 for r in (0,1,7)]:
                                 if bl.walls.has_key(w):
-                                    surf.blit(self.graphics.get_texture(self.texture).make_wall((w-self.rotation*2)%8, 2), (0,0))
+                                    wall = self.graphics.get_texture(self.texture).make_wall((w-self.rotation*2)%8, 2)
+                                    darkwall = wall.copy()
+                                    darkness = 10*(x+y)
+                                    darkwall.fill((darkness, darkness, darkness))
+                                    surf.blit(darkness, (0,0), pygame.BLEND_RGBA_MUL)
+                                    surf.blit(wall, (0,0))
 
                             # draw higher floor (if any)
                             if bl.floor == 0.5:
