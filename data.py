@@ -75,7 +75,7 @@ class Texture(object):
         self.name = name
         self.load_image(filenames, name)
         self.cache = {}
-        self.thinwalls = [pygame.image.load("gfx/thinwall%d.png"%i).convert() for i in range(8)]
+        #self.thinwalls = [pygame.image.load("gfx/thinwall%d.png"%i).convert() for i in range(8)]
         self.topmask = pygame.image.load("gfx/block_top_white.png").convert_alpha()
         #for i in range(len(self.thinwalls)):
         #    self.get_texture("concrete").make_wall(self.thinwalls[i], i, 1)
@@ -93,7 +93,8 @@ class Texture(object):
         if (direction, thickness) in self.cache:
             return self.cache[(direction, thickness)]
         print "making texture"
-        surf = self.thinwalls[direction].copy()
+        surf = self.topmask.copy()   #self.thinwalls[direction].copy()
+        surf.fill((0,0,0,0))
         #pygame.Surface(self.images[0].get_size(), pygame.SRCALPHA)
 
         leftwall, rightwall, top = self.images
