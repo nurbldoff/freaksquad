@@ -3,6 +3,7 @@ from __future__ import division
 from collections import namedtuple
 import sys, pygame
 from random import randint
+import pickle
 
 import data
 from vector import Vector
@@ -78,7 +79,7 @@ class View(object):
                             # draw walls from the back
                             for w in [(r+self.rotation*2)%8 for r in (0,1,7)]:
                                 darkness = 135+4*(x+y+z+3)
-                                print darkness
+                                #print darkness
                                 if bl.walls.has_key(w):
                                     wall = self.graphics.get_texture(self.texture).make_wall((w-self.rotation*2)%8, 2).copy()
                                     darkwall = wall.copy().convert_alpha()
@@ -151,7 +152,7 @@ while 1:
         if event.type == pygame.QUIT: sys.exit()
         elif event.type == pygame.KEYDOWN:
             print event.key
-            bl = lv.get_block(v.position)
+            bl = v.level.get_block(v.position)
             direction = -1
 
             if event.key == pygame.K_LEFT:
@@ -188,6 +189,25 @@ while 1:
             elif event.key == pygame.K_TAB:
                 v.graphics.load_all_textures()
                 v.textures = v.graphics.get_texture_names()
+
+            if event.key == pygame.K_k:
+                filename = raw_input("Filename to SAVE level: ")
+                if filename != "":
+                    try:
+                        with open(filename, "w") as f:
+                            pickle.dump(v.level, f)
+                    except IOError:
+                        print "Could not open file!"
+
+            if event.key == pygame.K_l:
+                filename = raw_input("Filename to LOAD level: ")
+                if filename != "":
+                    try:
+                        with open(filename) as f:
+                            v.level = pickle.load(f)
+                    except IOError:
+                        print "Could not open file!"
+
 
             elif event.key in (pygame.K_e, pygame.K_KP9):
                 direction = 0

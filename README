@@ -10,3 +10,6 @@ CONTROLS
          qweadzxc  put/remove a wall in one direction (se below), at the cursor
 	    space  toggle floor: block/half-block/floor/nothing
 	      r/t  rotate the whole view by +/-90 degrees
+	      k/l  Save/load level. Filename input from the terminal.
+                   
+NOTES
