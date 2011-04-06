@@ -82,7 +82,7 @@ class View(object):
                                     darkwall = wall.copy()
                                     darkness = 10*(x+y)
                                     darkwall.fill((darkness, darkness, darkness))
-                                    surf.blit(darkness, (0,0), pygame.BLEND_RGBA_MUL)
+                                    wall.blit(darkwall, (0,0))
                                     surf.blit(wall, (0,0))
 
                             # draw higher floor (if any)
