@@ -77,13 +77,17 @@ class View(object):
 
                             # draw walls from the back
                             for w in [(r+self.rotation*2)%8 for r in (0,1,7)]:
+                                darkness = 135+4*(x+y+z+3)
+                                print darkness
                                 if bl.walls.has_key(w):
-                                    wall = self.graphics.get_texture(self.texture).make_wall((w-self.rotation*2)%8, 2)
-                                    darkwall = wall.copy()
-                                    darkness = 10*(x+y)
-                                    darkwall.fill((darkness, darkness, darkness))
-                                    wall.blit(darkwall, (0,0))
+                                    wall = self.graphics.get_texture(self.texture).make_wall((w-self.rotation*2)%8, 2).copy()
+                                    darkwall = wall.copy().convert_alpha()
+
+                                    darkwall.fill((darkness, darkness, darkness), special_flags=pygame.BLEND_RGBA_MAX)
+                                    wall.blit(darkwall, (0,0), special_flags=pygame.BLEND_RGB_MULT)
                                     surf.blit(wall, (0,0))
+
+
 
                             # draw higher floor (if any)
                             if bl.floor == 0.5:
@@ -100,7 +104,11 @@ class View(object):
                             # draw walls in front
                             for w in [(r+self.rotation*2)%8 for r in (2,6,3,5,4)]:
                                 if bl.walls.has_key(w):
-                                    surf.blit(self.graphics.get_texture(self.texture).make_wall((w-self.rotation*2)%8, 2), (0,0))
+                                    wall = self.graphics.get_texture(self.texture).make_wall((w-self.rotation*2)%8, 2).copy()
+                                    darkwall = wall.copy().convert_alpha()
+                                    darkwall.fill((darkness, darkness, darkness), special_flags=pygame.BLEND_RGBA_MAX)
+                                    wall.blit(darkwall, (0,0), special_flags=pygame.BLEND_RGB_MULT)
+                                    surf.blit(wall, (0,0))
                                     #surf.blit(self.graphics.thinwalls[(w-self.rotation*2)%8], (0,0))
 
                             #if x+y > self.position.x+self.position.y:
