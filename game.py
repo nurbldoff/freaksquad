@@ -51,6 +51,25 @@ class View(object):
         v.position.z = constrain(v.position.z+dz, 0, lv.zsize-1)
         return v.position
 
+    def map2screen(self, x, y, z):
+        "Convert from map position to screen coordinates"
+        cx, cy = self.get_screen_center()
+        rx, ry = rotate_xypos(x, y, self.level.xsize-1, self.level.ysize-1,
+                                        (self.rotation)%4)
+        posx, posy = rotate_xypos(self.position.x, self.position.y,
+                                  self.level.xsize-1, self.level.ysize-1,
+                                  (-self.rotation)%4)
+        posz = self.position.z
+        return (cx+self.graphics.block_width//2*(posx-posy-x+y),
+                cy+self.graphics.block_depth//2*(-posx-posy+x+y)-self.graphics.block_height*(z-posz))
+
+    def screen2map(self, x, y, z):
+        "Convert from screen coordinates to map position, in the given z plane."
+        cx, cy = self.get_screen_center()
+        w, h, d = self.graphics.block_width, self.graphics.block_height, self.graphics.block_depth
+        dx, dy = ((x-cx-w//2), (y-cy+(z-self.position.z)*h-d//2))
+        rx, ry = (self.position.x + -dx/w + dy/d, self.position.y + dy/d + dx/w + 1)
+        return (-1 if rx < 0 else int(rx), -1 if ry < 0 else int(ry))
 
     def draw(self):
         cx, cy = self.get_screen_center()
@@ -65,17 +84,19 @@ class View(object):
                                         (self.rotation)%4)
                     bl = self.level.get_block(Vector(rx, ry, z))
 
-                    posx, posy = rotate_xypos(self.position.x, self.position.y,
-                                              self.level.xsize-1, self.level.ysize-1,
-                                              (-self.rotation)%4)
-                    posz = self.position.z
+                    #posx, posy = rotate_xypos(self.position.x, self.position.y,
+                    #                          self.level.xsize-1, self.level.ysize-1,
+                    #                          (-self.rotation)%4)
+                    #posz = self.position.z
 
                     # an offscreen bitmap to draw the block into
                     surf = pygame.Surface(rect.size, pygame.SRCALPHA)
 
-                    rect.center = (cx+self.graphics.block_width//2*(+posx-posy-x+y),
-                                   cy+self.graphics.block_depth//2*(-posx-posy+x+y)-\
-                                       self.graphics.block_height*(z-posz))
+                    #rect.center = (cx+self.graphics.block_width//2*(+posx-posy-x+y),
+                    #               cy+self.graphics.block_depth//2*(-posx-posy+x+y)-\
+                    #                   self.graphics.block_height*(z-posz))
+                    rect.center = self.map2screen(x,y,z)
+
                     # Check that we're not drawing outside the screen, which would be
                     # a waste of time.
                     if rect.clip(self.screen.get_rect()).size != (0,0):
@@ -163,6 +184,10 @@ v.draw()
 while 1:
     for event in pygame.event.get():
         if event.type == pygame.QUIT: sys.exit()
+
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            print "Mouse at:", v.screen2map(*event.pos, z=v.position.z), v.position.z
+
         elif event.type == pygame.KEYDOWN:
             print event.key
             bl = v.level.get_block(v.position)
@@ -220,6 +245,7 @@ while 1:
                             v.level = pickle.load(f)
                     except IOError:
                         print "Could not open file!"
+
 
 
             elif event.key in (pygame.K_e, pygame.K_KP9):
