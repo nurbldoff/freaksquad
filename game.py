@@ -22,6 +22,8 @@ class View(object):
         self.rotation = 0
 
         self.screen = pygame.display.set_mode(size)
+        self.offscreen_back = pygame.Surface(self.screen.get_size())
+        self.offscreen_front = pygame.Surface(self.screen.get_size())
         self.clock = pygame.time.Clock()
 
         self.graphics = data.Graphics()
@@ -31,6 +33,11 @@ class View(object):
         self.font = pygame.font.Font(None, 25)
 
         self.character_pos = [(0,3,0), (5, 5, 0), (7,2,0)]
+
+        self.soldiers = pygame.sprite.RenderUpdates()
+        for i,p in enumerate(self.character_pos):
+            self.soldiers.add(data.Entity("soldier%d"%i, self.graphics.stand_anim, self.graphics.run_anim,
+                                          p, randint(0,7)))
 
     def move_cursor_on_screen(self, dx=0, dy=0, dz=0):
         if self.rotation == 1:
@@ -44,10 +51,12 @@ class View(object):
         v.position.z = constrain(v.position.z+dz, 0, lv.zsize-1)
         return v.position
 
+
     def draw(self):
         cx, cy = self.get_screen_center()
         self.screen.fill(BLACK)
         rect=self.graphics.block_rect
+        self.offscreen_back.fill((0,0,0))
         for z in range(self.level.zsize):
             for y in range(self.level.ysize):
                 for x in range(self.level.xsize):
@@ -114,19 +123,23 @@ class View(object):
 
                             #if x+y > self.position.x+self.position.y:
                             #    surf.set_alpha(127)
-                            self.screen.blit(surf, rect)
+                            self.offscreen_back.blit(surf, rect)
 
                         if (rx, ry, z) == (self.position.x, self.position.y, self.position.z):
                             print "drawing cursor"
                             #rect.center = (cx-self.block_width//2*(posx-posy-x+y),
                             #               cy-self.block_depth//2*(posy+posx-x-y)-self.block_height*(z-posz))
 
-                            self.screen.blit(self.graphics.cursor_img, rect)
+                            self.offscreen_back.blit(self.graphics.cursor_img, rect)
 
         #print v.position
+
+        self.screen.blit(self.offscreen_back, (0,0))
+
         postext = self.font.render("%d, %d, %d"%v.position.tuple(), 1, (255,255,0))
         self.screen.blit(postext, (10,10))
-        pygame.display.flip()
+
+        pygame.display.update()
 
     def get_screen_center(self):
         return self.size[0]//2, self.size[1]//2

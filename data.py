@@ -254,3 +254,17 @@ class Graphics(object):
 
     def get_frame(self, img, n, ntot):
         return img.subsurface( pygame.Rect(n*img.width/ntot, 0, img.width/ntot, img.height) )
+
+
+class Entity(pygame.sprite.Sprite):
+    def __init__(self, name, stand_imgs, walk_imgs, position, direction=0):
+        pygame.sprite.Sprite.__init__(self)
+        self.name = name
+        self.stand_imgs = stand_imgs
+        self.walk_imgs = walk_imgs
+        self.position = position
+        self.direction = direction
+
+        # sprite stuff
+        self.rect = pygame.Rect((0,0), self.stand_imgs[0].get_size())
+        self.image = self.stand_imgs[direction]
