@@ -71,15 +71,31 @@ class View(object):
         cx, cy = self.get_screen_center()
         w, h, d = self.graphics.block_width, self.graphics.block_height, self.graphics.block_depth
         dx, dy = ((x-cx-w//2), (y-cy+(z-self.position.z)*h-d//2))
-        rx, ry = (self.position.x + -dx/w + dy/d, self.position.y + dy/d + dx/w + 1)
-        return (-1 if rx < 0 else int(rx), -1 if ry < 0 else int(ry))
+        if self.rotation%4 == 0:
+            rx, ry = (self.position.x + -dx/w + dy/d, self.position.y + dy/d + dx/w + 1)
+        elif self.rotation%4 == 1:
+            rx, ry = ( self.position.x - ( dy/d + dx/w), self.position.y + -dx/w + dy/d)
+        elif self.rotation%4 == 2:
+            rx, ry = ( self.position.x -( -dx/w + dy/d)+1, self.position.y - (dy/d + dx/w))
+        elif self.rotation%4 == 3:
+            rx, ry = ( self.position.x + dy/d + dx/w +1, self.position.y  - ( -dx/w + dy/d)+1)
 
-    def blit_block(self, pos, rect, surf):
+        if 0 <= rx < self.level.xsize and 0 <= ry < self.level.ysize:
+            return (int(rx), int(ry))
+        else:
+            return None
+
+
+    def blit_block(self, pos, rect):
         x, y, z = pos
+        bl = self.level.get_block(Vector(x, y, z))
+        surf = pygame.Surface(rect.size, pygame.SRCALPHA)
         if bl is not None:
              darkness = 4*(9-x+9-y+9-z)
              if bl.floor == 0:
-                 surf.blit(self.graphics.floor_img, (0,0))
+                 floor = self.graphics.floor_img.copy().convert_alpha()
+                 darken(floor,darkness)
+                 surf.blit(floor, (0,0))
 
              # draw walls from the back
              for w in [(r+self.rotation*2)%8 for r in (0,1,7)]:
@@ -90,9 +106,13 @@ class View(object):
 
              # draw higher floor (if any)
              if bl.floor == 0.5:
-                 surf.blit(self.graphics.block_half_img, (0,0))
+                 floor = self.graphics.block_half_img.copy().convert_alpha()
+                 darken(floor,darkness)
+                 surf.blit(floor, (0,0))
              elif bl.floor == 1:
-                 surf.blit(self.graphics.block_img, (0,0))
+                 floor = self.graphics.block_img.copy().convert_alpha()
+                 darken(floor,darkness)
+                 surf.blit(floor, (0,0))
 
              # just add some fake dudes
              if (x, y, z) in self.character_pos:
@@ -110,7 +130,9 @@ class View(object):
 
              #if x+y > self.position.x+self.position.y:
              #    surf.set_alpha(127)
-
+             return surf
+        else:
+            return None
 
 
     def draw(self):
@@ -119,12 +141,17 @@ class View(object):
         rect=self.graphics.block_rect
         self.offscreen_back.fill((0,0,0))
         for z in range(self.level.zsize):
-            for y in range(self.level.ysize):
-                for x in range(self.level.xsize):
-
+            for a in range(self.level.xsize+self.level.ysize):
+                if a >= self.level.xsize:
+                    c = a - self.level.xsize   #self.level.ysize+self.level.xsize-1-a
+                else:
+                    c = 0
+                for y in range(c,a-c):
+                    x = a-y-1
+                    print (x, y)
                     rx, ry = rotate_xypos(x, y, self.level.xsize-1, self.level.ysize-1,
                                         (self.rotation)%4)
-                    bl = self.level.get_block(Vector(rx, ry, z))
+
 
                     #posx, posy = rotate_xypos(self.position.x, self.position.y,
                     #                          self.level.xsize-1, self.level.ysize-1,
@@ -132,7 +159,7 @@ class View(object):
                     #posz = self.position.z
 
                     # an offscreen bitmap to draw the block into
-                    surf = pygame.Surface(rect.size, pygame.SRCALPHA)
+
 
                     #rect.center = (cx+self.graphics.block_width//2*(+posx-posy-x+y),
                     #               cy+self.graphics.block_depth//2*(-posx-posy+x+y)-\
@@ -143,9 +170,10 @@ class View(object):
                     # a waste of time.
                     if rect.clip(self.screen.get_rect()).size != (0,0):
 
-                        self.draw_block((rx, ry, z), rect, surf)
-                        self.offscreen_back.blit(surf, rect)
-                        if (x, y, z) == (self.position.x, self.position.y, self.position.z):
+                        surf = self.blit_block((rx, ry, z), rect)
+                        if surf is not None:
+                            self.offscreen_back.blit(surf, rect)
+                        if (rx, ry, z) == (self.position.x, self.position.y, self.position.z):
                             print "drawing cursor"
                             self.offscreen_back.blit(self.graphics.cursor_img, rect)
 
@@ -180,7 +208,11 @@ while 1:
         if event.type == pygame.QUIT: sys.exit()
 
         if event.type == pygame.MOUSEBUTTONDOWN:
-            print "Mouse at:", v.screen2map(*event.pos, z=v.position.z), v.position.z
+            p = v.screen2map(*event.pos, z=v.position.z)
+            if p is not None:
+                print "Mouse at:", p
+            else:
+                print "You moused outside!"
 
         elif event.type == pygame.KEYDOWN:
             print event.key
