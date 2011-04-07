@@ -7,7 +7,7 @@ import pickle
 
 import data
 from vector import Vector
-from utils import constrain, rotate_xypos
+from utils import constrain, rotate_xypos, darken
 
 # colors
 BLACK = 0,0,0
@@ -36,8 +36,8 @@ class View(object):
 
         self.soldiers = pygame.sprite.RenderUpdates()
         for i,p in enumerate(self.character_pos):
-            self.soldiers.add(data.Entity("soldier%d"%i, self.graphics.stand_anim, self.graphics.run_anim,
-                                          p, randint(0,7)))
+            self.soldiers.add(data.Entity("soldier%d"%i, self.graphics.stand_anim,
+                                          self.graphics.run_anim, p, randint(0,7)))
 
     def move_cursor_on_screen(self, dx=0, dy=0, dz=0):
         if self.rotation == 1:
@@ -50,6 +50,9 @@ class View(object):
         v.position.y = constrain(v.position.y+dy, 0, lv.ysize-1)
         v.position.z = constrain(v.position.z+dz, 0, lv.zsize-1)
         return v.position
+
+    def get_screen_center(self):
+        return self.size[0]//2, self.size[1]//2
 
     def map2screen(self, x, y, z):
         "Convert from map position to screen coordinates"
@@ -102,20 +105,17 @@ class View(object):
                     if rect.clip(self.screen.get_rect()).size != (0,0):
 
                         if bl is not None:
-
+                            darkness = 4*(9-x+9-y+9-z)
                             if bl.floor == 0:
                                 surf.blit(self.graphics.floor_img, (0,0))
 
                             # draw walls from the back
                             for w in [(r+self.rotation*2)%8 for r in (0,1,7)]:
-                                darkness = 135+4*(x+y+z+3)
+
                                 #print darkness
                                 if bl.walls.has_key(w):
                                     wall = self.graphics.get_texture(self.texture).make_wall((w-self.rotation*2)%8, 2).copy()
-                                    darkwall = wall.copy().convert_alpha()
-
-                                    darkwall.fill((darkness, darkness, darkness), special_flags=pygame.BLEND_RGBA_MAX)
-                                    wall.blit(darkwall, (0,0), special_flags=pygame.BLEND_RGB_MULT)
+                                    darken(wall, darkness)
                                     surf.blit(wall, (0,0))
 
 
@@ -136,9 +136,7 @@ class View(object):
                             for w in [(r+self.rotation*2)%8 for r in (2,6,3,5,4)]:
                                 if bl.walls.has_key(w):
                                     wall = self.graphics.get_texture(self.texture).make_wall((w-self.rotation*2)%8, 2).copy()
-                                    darkwall = wall.copy().convert_alpha()
-                                    darkwall.fill((darkness, darkness, darkness), special_flags=pygame.BLEND_RGBA_MAX)
-                                    wall.blit(darkwall, (0,0), special_flags=pygame.BLEND_RGB_MULT)
+                                    darken(wall, darkness)
                                     surf.blit(wall, (0,0))
                                     #surf.blit(self.graphics.thinwalls[(w-self.rotation*2)%8], (0,0))
 
@@ -161,9 +159,6 @@ class View(object):
         self.screen.blit(postext, (10,10))
 
         pygame.display.update()
-
-    def get_screen_center(self):
-        return self.size[0]//2, self.size[1]//2
 
 
 

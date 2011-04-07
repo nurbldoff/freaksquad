@@ -51,3 +51,8 @@ def clip_masks(masks, positions):
         tmprect.topleft = p
         frect = frect.clip(tmprect)
     return tmp, frect
+
+def darken(surf, amount):
+    darksurf = surf.copy().convert_alpha()
+    darksurf.fill((255-amount, 255-amount, 255-amount), special_flags=pygame.BLEND_RGBA_MAX)
+    surf.blit(darksurf, (0,0), special_flags=pygame.BLEND_RGB_MULT)
