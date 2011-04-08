@@ -207,9 +207,9 @@ class Graphics(object):
         self.textures = []
         self.path = "gfx/textures"
 
-        self.block_img = pygame.image.load("gfx/block_textured.png")
-        self.block_half_img = pygame.image.load("gfx/block_half.png")
-        self.floor_img = pygame.image.load("gfx/floor.png")
+        self.block_img = pygame.image.load("gfx/block_textured.png").convert_alpha()
+        self.block_half_img = pygame.image.load("gfx/block_half.png").convert_alpha()
+        self.floor_img = pygame.image.load("gfx/floor.png").convert_alpha()
         self.block_rect = self.block_img.get_rect()
         self.block_height = 36
         self.block_width = 64

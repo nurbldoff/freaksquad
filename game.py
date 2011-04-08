@@ -93,25 +93,21 @@ class View(object):
         if bl is not None:
              darkness = 4*(9-x+9-y+9-z)
              if bl.floor == 0:
-                 floor = self.graphics.floor_img.copy().convert_alpha()
-                 darken(floor,darkness)
+                 floor = darken(self.graphics.floor_img, darkness)
                  surf.blit(floor, (0,0))
 
              # draw walls from the back
              for w in [(r+self.rotation*2)%8 for r in (0,1,7)]:
                  if bl.walls.has_key(w):
-                     wall = self.graphics.get_texture(self.texture).make_wall((w-self.rotation*2)%8, 2).copy()
-                     darken(wall, darkness)
+                     wall = darken(self.graphics.get_texture(self.texture).make_wall((w-self.rotation*2)%8, 2), darkness)
                      surf.blit(wall, (0,0))
 
              # draw higher floor (if any)
              if bl.floor == 0.5:
-                 floor = self.graphics.block_half_img.copy().convert_alpha()
-                 darken(floor,darkness)
+                 floor = darken(self.graphics.block_half_img, darkness)
                  surf.blit(floor, (0,0))
              elif bl.floor == 1:
-                 floor = self.graphics.block_img.copy().convert_alpha()
-                 darken(floor,darkness)
+                 floor = darken(self.graphics.block_img, darkness)
                  surf.blit(floor, (0,0))
 
              # just add some fake dudes
@@ -123,8 +119,8 @@ class View(object):
              # draw walls in front
              for w in [(r+self.rotation*2)%8 for r in (2,6,3,5,4)]:
                  if bl.walls.has_key(w):
-                     wall = self.graphics.get_texture(self.texture).make_wall((w-self.rotation*2)%8, 2).copy()
-                     darken(wall, darkness)
+                     wall = darken(self.graphics.get_texture(self.texture).make_wall((w-self.rotation*2)%8, 2),
+                                   darkness)
                      surf.blit(wall, (0,0))
                      #surf.blit(self.graphics.thinwalls[(w-self.rotation*2)%8], (0,0))
 
@@ -140,6 +136,7 @@ class View(object):
         self.screen.fill(BLACK)
         rect=self.graphics.block_rect
         self.offscreen_back.fill((0,0,0))
+
         for z in range(self.level.zsize):
             for a in range(self.level.xsize+self.level.ysize):
                 if a >= self.level.xsize:
@@ -148,22 +145,8 @@ class View(object):
                     c = 0
                 for y in range(c,a-c):
                     x = a-y-1
-                    print (x, y)
                     rx, ry = rotate_xypos(x, y, self.level.xsize-1, self.level.ysize-1,
                                         (self.rotation)%4)
-
-
-                    #posx, posy = rotate_xypos(self.position.x, self.position.y,
-                    #                          self.level.xsize-1, self.level.ysize-1,
-                    #                          (-self.rotation)%4)
-                    #posz = self.position.z
-
-                    # an offscreen bitmap to draw the block into
-
-
-                    #rect.center = (cx+self.graphics.block_width//2*(+posx-posy-x+y),
-                    #               cy+self.graphics.block_depth//2*(-posx-posy+x+y)-\
-                    #                   self.graphics.block_height*(z-posz))
                     rect.center = self.map2screen(x,y,z)
 
                     # Check that we're not drawing outside the screen, which would be
