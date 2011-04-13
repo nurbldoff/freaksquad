@@ -1,7 +1,7 @@
 from __future__ import division
 
 from collections import namedtuple
-import sys, pygame
+import sys, pygame, time
 from random import randint
 import pickle
 
@@ -11,6 +11,7 @@ from utils import constrain, rotate_xypos, darken
 
 # colors
 BLACK = 0,0,0
+FRAMES_PER_SECOND = 25
 
 pygame.init()
 
@@ -34,10 +35,10 @@ class View(object):
 
         self.character_pos = [(0,3,0), (5, 5, 0), (7,2,0)]
 
-        self.soldiers = pygame.sprite.RenderUpdates()
+        self.soldiers = []
         for i,p in enumerate(self.character_pos):
-            self.soldiers.add(data.Entity("soldier%d"%i, self.graphics.stand_anim,
-                                          self.graphics.run_anim, p, randint(0,7)))
+            self.soldiers.append(data.Entity("soldier%d"%i, self.graphics.stand_anim,
+                                          self.graphics.run_anim, 8, p, randint(0,7)))
 
     def move_cursor_on_screen(self, dx=0, dy=0, dz=0):
         if self.rotation == 1:
@@ -85,8 +86,65 @@ class View(object):
         else:
             return None
 
+    def get_overlap(self, position):
+        """
+        return a list of coordinates for the blocks that are overlapped by the given block
+        """
+        x, y, z = position
+        l = [
+                   (x-2, y-2),
+             (x-1, y-2), (x-2, y-1),
+                   (x-1, y-1),
+             (x,   y-1), (x-1, y),
+                   (x,   y),
+             (x+1, y),   (x, y+1),
+                   (x+1, y+1),
+             (x+2, y+1), (x+1, y+2),
+                   (x+2, y+2)
+                   ]
+        return l
 
-    def blit_block(self, pos, rect):
+    def draw_column(self, pos, maxdist=5, back_also=False):
+        """
+
+        """
+        surf = pygame.Surface((self.graphics.block_width, self.screen.get_height()), pygame.SRCALPHA)
+        px, py, pz = pos
+        xoffs, yoffs = self.map2screen(px,py,pz)
+        #xoffs += self.graphics.block_width//4
+        yoffs = self.graphics.block_depth+1
+        for z in range(max(pz-maxdist, 0) if back_also else pz, min(self.level.zsize-1, pz+maxdist)):
+            for d in range(-maxdist if back_also else 0, maxdist):
+                x = px + d
+                y = py + d
+
+                bl = self.level.get_block(Vector(x, y, z))
+                if bl is not None:
+                    blsurf = self.blit_block((x,y,z), self.graphics.block_rect,
+                                                 background = not (x,y,z) == pos)
+                    lx, ly = self.map2screen(x,y,z)
+                    surf.blit(blsurf, (lx-xoffs, ly-yoffs))
+                    if (x, y, z) == (self.position.x, self.position.y, self.position.z):
+                        #print "drawing cursor"
+                        surf.blit(self.graphics.cursor_img, (lx-xoffs, ly-yoffs))
+
+                bl = self.level.get_block(Vector(x+1, y, z))
+                if bl is not None:
+                    blsurf = self.blit_block((x+1,y,z), self.graphics.block_rect,
+                                             background = not (x+1,y,z) == pos)
+                    lx, ly = self.map2screen(x+1,y,z)
+                    surf.blit(blsurf, (lx-xoffs, ly-yoffs))
+                bl = self.level.get_block(Vector(x, y+1, z))
+                if bl is not None:
+                    blsurf = self.blit_block((x,y+1,z), self.graphics.block_rect,
+                                             background = not (x,y+1,z) == pos)
+                    lx, ly = self.map2screen(x,y+1,z)
+                    surf.blit(blsurf, (lx-xoffs, ly-yoffs))
+        return surf
+
+
+
+    def blit_block(self, pos, rect, foreground=True, background=True, entity=None):
         x, y, z = pos
         bl = self.level.get_block(Vector(x, y, z))
         surf = pygame.Surface(rect.size, pygame.SRCALPHA)
@@ -97,10 +155,11 @@ class View(object):
                  surf.blit(floor, (0,0))
 
              # draw walls from the back
-             for w in [(r+self.rotation*2)%8 for r in (0,1,7)]:
-                 if bl.walls.has_key(w):
-                     wall = darken(self.graphics.get_texture(self.texture).make_wall((w-self.rotation*2)%8, 2), darkness)
-                     surf.blit(wall, (0,0))
+             if background:
+                 for w in [(r+self.rotation*2)%8 for r in (0,1,7,2,6)]:
+                     if bl.walls.has_key(w):
+                         wall = darken(self.graphics.get_texture(self.texture).make_wall((w-self.rotation*2)%8, 2), darkness)
+                         surf.blit(wall, (0,0))
 
              # draw higher floor (if any)
              if bl.floor == 0.5:
@@ -111,18 +170,18 @@ class View(object):
                  surf.blit(floor, (0,0))
 
              # just add some fake dudes
-             if (x, y, z) in self.character_pos:
-                 char_img = self.graphics.stand_anim[(x+y+z+2*self.rotation)%8]
-                 surf.blit(char_img, ((rect.width - char_img.get_width())/2,
-                                      (rect.height - char_img.get_height())/2-10))
+             if entity is not None:
+                 surf.blit(entity.get_stand_image(), ((rect.width - entity.rect.width)/2,
+                                      (rect.height - entity.rect.height)/2-10))
 
              # draw walls in front
-             for w in [(r+self.rotation*2)%8 for r in (2,6,3,5,4)]:
-                 if bl.walls.has_key(w):
-                     wall = darken(self.graphics.get_texture(self.texture).make_wall((w-self.rotation*2)%8, 2),
-                                   darkness)
-                     surf.blit(wall, (0,0))
-                     #surf.blit(self.graphics.thinwalls[(w-self.rotation*2)%8], (0,0))
+             if foreground:
+                 for w in [(r+self.rotation*2)%8 for r in (3,5,4)]:
+                     if bl.walls.has_key(w):
+                         wall = darken(self.graphics.get_texture(self.texture).make_wall((w-self.rotation*2)%8, 2),
+                                       darkness)
+                         surf.blit(wall, (0,0))
+                         #surf.blit(self.graphics.thinwalls[(w-self.rotation*2)%8], (0,0))
 
              #if x+y > self.position.x+self.position.y:
              #    surf.set_alpha(127)
@@ -136,6 +195,8 @@ class View(object):
         self.screen.fill(BLACK)
         rect=self.graphics.block_rect
         self.offscreen_back.fill((0,0,0))
+
+        entity_positions = [e.position for e in self.soldiers]
 
         for z in range(self.level.zsize):
             for a in range(self.level.xsize+self.level.ysize):
@@ -153,14 +214,23 @@ class View(object):
                     # a waste of time.
                     if rect.clip(self.screen.get_rect()).size != (0,0):
 
-                        surf = self.blit_block((rx, ry, z), rect)
+                        if (rx, ry, z) in entity_positions:
+                            surf = self.blit_block((rx, ry, z), rect, entity=self.soldiers[
+                                entity_positions.index((rx, ry, z))
+                                ])
+                        else:
+                            surf = self.blit_block((rx, ry, z), rect)
                         if surf is not None:
                             self.offscreen_back.blit(surf, rect)
-                        if (rx, ry, z) == (self.position.x, self.position.y, self.position.z):
-                            print "drawing cursor"
-                            self.offscreen_back.blit(self.graphics.cursor_img, rect)
+                        # if (rx, ry, z) == (self.position.x, self.position.y, self.position.z):
+                        #     print "drawing cursor"
+                        #     s = self.draw_column((rx, ry, z))
+                        #     self.offscreen_back.blit(s, (rect.left, 0))
+                        #     #self.offscreen_back.blit(self.graphics.cursor_img, rect)
 
-
+        s = self.draw_column(self.position.tuple())
+        rect.center = self.map2screen(*self.position.tuple())
+        self.offscreen_back.blit(s, (rect.left, 0))
         #print v.position
 
         self.screen.blit(self.offscreen_back, (0,0))
@@ -171,6 +241,39 @@ class View(object):
         pygame.display.update()
 
 
+    def move_entity(self, entity, newpos, steps=10):
+        x, y, z = entity.position
+        nx, ny, nz = newpos
+        spos = self.map2screen(x, y, z)
+        direction = ((-1,-1), (0,-1), (1,-1), (1,0), (1,1), (0,1), (-1,1), (-1,0)).index((nx-x, ny-y))
+        snewpos = self.map2screen(*newpos)
+
+        dx = snewpos[0] - spos[0]
+        dy = snewpos[1] - spos[1]
+        #dz *= self.graphics.block_height
+
+        #char_img = self.graphics.run_anim[(x+y+z+2*self.rotation)%8]
+        startrect = self.graphics.block_rect.copy()
+        endrect = self.graphics.block_rect.copy()
+        rect = entity.rect
+        startrect.center = rect.center = spos
+        endrect.center = snewpos
+
+        startforeground = self.draw_column((x, y, z))
+        endforeground = self.draw_column(newpos)
+
+        for t in range(steps):
+            self.screen.blit(self.offscreen_back, rect.topleft, rect)
+            rect.left += dx/steps
+            rect.top += dy/steps
+            self.screen.blit(entity.get_walk_frame(direction, t%8), (rect.left, rect.top-5))
+            self.screen.blit(startforeground, (startrect.left, 0))
+            self.screen.blit(endforeground, (endrect.left, 0))
+            pygame.display.update(rect)
+            self.clock.tick(FRAMES_PER_SECOND)
+
+        entity.position = newpos
+        entity.direction=direction
 
 lv = data.Level(size=(10,10,10))
 
@@ -191,14 +294,14 @@ while 1:
         if event.type == pygame.QUIT: sys.exit()
 
         if event.type == pygame.MOUSEBUTTONDOWN:
-            p = v.screen2map(*event.pos, z=v.position.z)
+            p = v.screen2map(*event.pos, z=0)
             if p is not None:
                 print "Mouse at:", p
             else:
                 print "You moused outside!"
 
         elif event.type == pygame.KEYDOWN:
-            print event.key
+            #print event.key
             bl = v.level.get_block(v.position)
             direction = -1
 
@@ -237,7 +340,7 @@ while 1:
                 v.graphics.load_all_textures()
                 v.textures = v.graphics.get_texture_names()
 
-            if event.key == pygame.K_k:
+            elif event.key == pygame.K_k:
                 filename = raw_input("Filename to SAVE level: ")
                 if filename != "":
                     try:
@@ -246,7 +349,7 @@ while 1:
                     except IOError:
                         print "Could not open file!"
 
-            if event.key == pygame.K_l:
+            elif event.key == pygame.K_l:
                 filename = raw_input("Filename to LOAD level: ")
                 if filename != "":
                     try:
@@ -255,7 +358,10 @@ while 1:
                     except IOError:
                         print "Could not open file!"
 
-
+            elif event.key == pygame.K_u:
+                s = v.soldiers[0]
+                x, y, z = s.position
+                v.move_entity(s, (x+1, y, z))
 
             elif event.key in (pygame.K_e, pygame.K_KP9):
                 direction = 0
@@ -275,13 +381,21 @@ while 1:
                 direction = 7
 
             if direction > -1:
-                rotdir = (direction+v.rotation*2)%8
-                if bl.get_wall(rotdir) is not None:
-                    bl.remove_wall(rotdir)
+                if event.mod == pygame.KMOD_LSHIFT:
+                    s = v.soldiers[0]
+                    dx, dy = ((-1,-1), (0,-1), (1,-1), (1,0), (1,1), (0,1), (-1,1), (-1,0))[direction]
+                    x, y, z = s.position
+                    v.move_entity(s, (x+dx, y+dy, z))
                 else:
-                    bl.set_wall(rotdir, 1)
+                    rotdir = (direction+v.rotation*2)%8
+                    if bl.get_wall(rotdir) is not None:
+                        bl.remove_wall(rotdir)
+                    else:
+                        bl.set_wall(rotdir, 1)
 
+            t0=time.clock()
             v.draw()
+            print "Drawing took", time.clock()-t0, "s."
 
     v.clock.tick(240)
 

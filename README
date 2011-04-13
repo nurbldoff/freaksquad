@@ -5,6 +5,7 @@ WHAT IS IT?
 
 CONTROLS
        arrow keys  move the cursor/subcursor in the plane
+       with shift  move soldier
         pgup/down  move the cursor/subcursor vertically
        numpad, or  
          qweadzxc  put/remove a wall in one direction (se below), at the cursor

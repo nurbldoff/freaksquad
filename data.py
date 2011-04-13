@@ -27,7 +27,10 @@ class Level(object):
         self.data[pos.z][pos.y][pos.x] = block
 
     def get_block(self, pos):
-        return self.data[pos.z][pos.y][pos.x]
+        if 0 <= pos.x < self.xsize and 0 <= pos.y < self.ysize and 0 <= pos.z < self.zsize:
+            return self.data[pos.z][pos.y][pos.x]
+        else:
+            return None
 
 
 class Block(object):
@@ -224,8 +227,8 @@ class Graphics(object):
         self.load_all_textures()
 
         # UFO/XCOM graphics found on the internets. Included only as placeholders!
-        self.run_anim = [pygame.transform.scale2x(pygame.image.load("gfx/xcom0pm_run%d.tga"%(i+1))) for i in range(8)]
-        self.stand_anim = [pygame.transform.scale2x(pygame.image.load("gfx/xcom0pm_stand%d.tga"%(i+1))) for i in range(8)]
+        self.run_anim = [pygame.transform.scale2x(pygame.image.load("gfx/xcom0pm_run%d.tga"%(i))) for i in (8,7,6,5,4,3,2,1)]
+        self.stand_anim = [pygame.transform.scale2x(pygame.image.load("gfx/xcom0pm_stand%d.tga"%i)) for i in (8,7,6,5,4,3,2,1)]
 
         self.cursor_img = pygame.image.load("gfx/cursor.png")
         self.cursor_rect = self.block_img.get_rect()
@@ -253,18 +256,35 @@ class Graphics(object):
         return [texture.name for texture in self.textures]
 
     def get_frame(self, img, n, ntot):
-        return img.subsurface( pygame.Rect(n*img.width/ntot, 0, img.width/ntot, img.height) )
+        w, h = img.get_size()
+        return img.subsurface( pygame.Rect(n*w/ntot, 0, w/ntot, h) )
 
 
 class Entity(pygame.sprite.Sprite):
-    def __init__(self, name, stand_imgs, walk_imgs, position, direction=0):
+    def __init__(self, name, stand_imgs, walk_imgs, walk_frames=8, position=(0,0,0), direction=0):
         pygame.sprite.Sprite.__init__(self)
         self.name = name
         self.stand_imgs = stand_imgs
         self.walk_imgs = walk_imgs
+        self.walk_frames = walk_frames
+
         self.position = position
         self.direction = direction
 
         # sprite stuff
         self.rect = pygame.Rect((0,0), self.stand_imgs[0].get_size())
         self.image = self.stand_imgs[direction]
+
+    def get_walk_frame(self, direction, n):
+        """
+        """
+        w, h = self.rect.size
+        ntot = self.walk_frames
+        return self.walk_imgs[direction].subsurface( pygame.Rect(n*w, 0, w, h) )
+
+    def get_stand_image(self):
+        """
+        """
+        return self.stand_imgs[self.direction]
+
+
